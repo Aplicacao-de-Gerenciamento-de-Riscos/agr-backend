@@ -105,7 +105,7 @@ public class JiraIssueResponseDTO extends JiraResponseDTO{
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class WorklogEntry {
         private String self;
-        private String author;
+        private Author author;
         private String created;
         private String updated;
         private String timeSpent;
