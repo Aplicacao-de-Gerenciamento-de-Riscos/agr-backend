@@ -20,6 +20,7 @@ CREATE TABLE tb_component (
 -- Tabela: tb_issue
 CREATE TABLE tb_issue (
                           cod_issue BIGINT PRIMARY KEY,
+                          key VARCHAR(255),
                           time_original_estimate BIGINT,
                           time_estimate BIGINT,
                           work_ratio BIGINT,
@@ -36,8 +37,10 @@ CREATE TABLE tb_issue (
                           summary VARCHAR(255),
                           cod_epic BIGINT,
                           cod_sprint BIGINT,
+                          cod_parent BIGINT,
                           CONSTRAINT fk_epic FOREIGN KEY (cod_epic) REFERENCES tb_epic(cod_epic),
-                          CONSTRAINT fk_sprint FOREIGN KEY (cod_sprint) REFERENCES tb_sprint(cod_sprint)
+                          CONSTRAINT fk_sprint FOREIGN KEY (cod_sprint) REFERENCES tb_sprint(cod_sprint),
+                          CONSTRAINT fk_parent FOREIGN KEY (cod_parent) REFERENCES tb_issue(cod_issue)
 );
 
 -- Tabela: tb_issue_components (tabela de relacionamento)

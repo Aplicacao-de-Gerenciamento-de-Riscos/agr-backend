@@ -2,6 +2,7 @@ package com.catolicasc.agrbackend.feature.issue.dto;
 
 import com.catolicasc.agrbackend.feature.component.dto.ComponentDTO;
 import com.catolicasc.agrbackend.feature.epic.dto.EpicDTO;
+import com.catolicasc.agrbackend.feature.issue.domain.Issue;
 import com.catolicasc.agrbackend.feature.sprint.dto.SprintDTO;
 import lombok.Data;
 
@@ -11,6 +12,7 @@ import java.util.List;
 @Data
 public class IssueDTO {
     private Long id;
+    private String key;
     private Long timeOriginalEstimate;
     private Long timeEstimate;
     private Long workRatio;
@@ -28,4 +30,5 @@ public class IssueDTO {
     private List<ComponentDTO> components;
     private EpicDTO epic;
     private SprintDTO sprint;
+    private IssueDTO parent;
 }

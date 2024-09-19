@@ -37,6 +37,14 @@ public class JiraIssueResponseDTO extends JiraResponseDTO{
         private List<Attachment> attachment;
         private String description;
         private String summary;
+        private Long timeoriginalestimate;
+        private Long timeestimate;
+        private Long workratio;
+        private Long timespent;
+        private String resolutiondate;
+        private String updated;
+        private String created;
+        private boolean flagged;
     }
 
     @Data

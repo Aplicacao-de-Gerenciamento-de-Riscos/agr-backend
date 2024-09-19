@@ -22,6 +22,9 @@ public class Issue {
     @Column(name = "cod_issue")
     private Long id;
 
+    @Column(name = "key")
+    private String key;
+
     @Column(name = "time_original_estimate")
     private Long timeOriginalEstimate;
 
@@ -77,5 +80,9 @@ public class Issue {
     @JoinColumn(name = "cod_sprint")
     @ManyToOne
     private Sprint sprint;
+
+    @JoinColumn(name = "cod_parent")
+    @ManyToOne
+    private Issue parent;
 
 }
