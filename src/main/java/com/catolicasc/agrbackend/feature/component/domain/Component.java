@@ -19,4 +19,6 @@ public class Component {
     @Column(name = "cod_component")
     private Long id;
 
+    @Column(name = "name")
+    private String name;
 }

@@ -3,6 +3,7 @@ package com.catolicasc.agrbackend.feature.issue.domain;
 import com.catolicasc.agrbackend.feature.component.domain.Component;
 import com.catolicasc.agrbackend.feature.epic.domain.Epic;
 import com.catolicasc.agrbackend.feature.sprint.domain.Sprint;
+import com.catolicasc.agrbackend.feature.worklog.domain.Worklog;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -33,9 +34,6 @@ public class Issue {
 
     @Column(name = "work_ratio")
     private Long workRatio;
-
-    @Column(name = "work_log")
-    private Long workLog;
 
     @Column(name = "status")
     private String status;
@@ -85,4 +83,6 @@ public class Issue {
     @ManyToOne
     private Issue parent;
 
+    @OneToMany(mappedBy = "issue")
+    private List<Worklog> worklogs;
 }

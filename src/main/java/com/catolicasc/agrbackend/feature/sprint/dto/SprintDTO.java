@@ -5,4 +5,5 @@ import lombok.Data;
 @Data
 public class SprintDTO {
     private Long id;
+    private String name;
 }

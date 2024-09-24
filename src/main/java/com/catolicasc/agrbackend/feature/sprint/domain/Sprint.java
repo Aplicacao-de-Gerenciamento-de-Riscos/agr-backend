@@ -19,4 +19,7 @@ public class Sprint {
     @Column(name = "cod_sprint")
     private Long id;
 
+    @Column(name = "name")
+    private String name;
+
 }

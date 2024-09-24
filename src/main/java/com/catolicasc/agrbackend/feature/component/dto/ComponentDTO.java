@@ -5,4 +5,5 @@ import lombok.Data;
 @Data
 public class ComponentDTO {
     private Long id;
+    private String name;
 }

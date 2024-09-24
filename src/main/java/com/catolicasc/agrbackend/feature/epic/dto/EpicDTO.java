@@ -5,4 +5,7 @@ import lombok.Data;
 @Data
 public class EpicDTO {
     private Long id;
+    private String name;
+    private String summary;
+    private String key;
 }

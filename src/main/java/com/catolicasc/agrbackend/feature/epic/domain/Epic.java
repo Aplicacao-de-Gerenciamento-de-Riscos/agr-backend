@@ -18,4 +18,13 @@ public class Epic {
     @Id
     @Column(name = "cod_epic")
     private Long id;
+
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "summary")
+    private String summary;
+
+    @Column(name = "key")
+    private String key;
 }
