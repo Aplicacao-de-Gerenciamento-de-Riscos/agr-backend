@@ -83,6 +83,8 @@ public class Issue {
     @ManyToOne
     private Issue parent;
 
-    @OneToMany(mappedBy = "issue")
-    private List<Worklog> worklogs;
+    @JoinColumn(name = "cod_worklog")
+    @OneToOne
+    private Worklog worklog;
+
 }

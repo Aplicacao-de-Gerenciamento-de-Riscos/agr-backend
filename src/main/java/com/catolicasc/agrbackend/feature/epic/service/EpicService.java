@@ -23,9 +23,16 @@ public class EpicService {
 
     public Epic toDomain(JiraIssueResponseDTO.Epic epic) {
         Epic epicDomain = new Epic();
-        epic.setId(epic.getId());
-        epic.setName(epic.getName());
+        epicDomain.setId(Long.parseLong(epic.getId()));
+        epicDomain.setName(epic.getName());
         return epicDomain;
+    }
+
+    public Epic toDomain(EpicDTO epicDTO) {
+        Epic epic = new Epic();
+        epic.setId(epicDTO.getId());
+        epic.setName(epicDTO.getName());
+        return epic;
     }
 
     public EpicDTO toDto(JiraIssueResponseDTO.Epic epic) {

@@ -28,6 +28,13 @@ public class SprintService {
         return sprintDomain;
     }
 
+    public Sprint toDomain(SprintDTO sprintDTO) {
+        Sprint sprint = new Sprint();
+        sprint.setId(sprintDTO.getId());
+        sprint.setName(sprintDTO.getName());
+        return sprint;
+    }
+
     public SprintDTO toDto(JiraIssueResponseDTO.Sprint sprint) {
         Sprint sprintDomain = findById(Long.parseLong(sprint.getId()));
         SprintDTO sprintDTO = new SprintDTO();

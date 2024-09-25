@@ -4,6 +4,7 @@ import com.catolicasc.agrbackend.feature.component.dto.ComponentDTO;
 import com.catolicasc.agrbackend.feature.epic.dto.EpicDTO;
 import com.catolicasc.agrbackend.feature.issue.domain.Issue;
 import com.catolicasc.agrbackend.feature.sprint.dto.SprintDTO;
+import com.catolicasc.agrbackend.feature.worklog.dto.WorklogDTO;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -16,7 +17,7 @@ public class IssueDTO {
     private Long timeOriginalEstimate;
     private Long timeEstimate;
     private Long workRatio;
-    private Long workLog;
+    private WorklogDTO workLog;
     private String status;
     private Long timespent;
     private LocalDateTime resolutionDate;
@@ -31,4 +32,5 @@ public class IssueDTO {
     private EpicDTO epic;
     private SprintDTO sprint;
     private IssueDTO parent;
+    private WorklogDTO worklog;
 }

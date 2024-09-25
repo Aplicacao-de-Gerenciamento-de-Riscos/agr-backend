@@ -8,11 +8,14 @@ import com.catolicasc.agrbackend.feature.issue.domain.Issue;
 import com.catolicasc.agrbackend.feature.issue.dto.IssueDTO;
 import com.catolicasc.agrbackend.feature.issue.repository.IssueRepository;
 import com.catolicasc.agrbackend.feature.sprint.service.SprintService;
+import com.catolicasc.agrbackend.feature.worklog.service.WorklogService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static java.util.Objects.nonNull;
 
@@ -24,17 +27,19 @@ public class IssueService {
     private final ComponentService componentService;
     private final SprintService sprintService;
     private final EpicService epicService;
+    private final WorklogService worklogService;
 
     public IssueService(
             IssueRepository issueRepository,
             JiraAPI jiraAPI,
             ComponentService componentService,
-            SprintService sprintService, EpicService epicService) {
+            SprintService sprintService, EpicService epicService, WorklogService worklogService) {
         this.issueRepository = issueRepository;
         this.jiraAPI = jiraAPI;
         this.componentService = componentService;
         this.sprintService = sprintService;
         this.epicService = epicService;
+        this.worklogService = worklogService;
     }
 
     public JiraIssueResponseDTO listIssuesBySprint(String sprintId) {
@@ -43,8 +48,9 @@ public class IssueService {
 
     public void syncIssuesBySprint(String sprintId) {
         JiraIssueResponseDTO jiraIssueResponseDTO = listIssuesBySprint(sprintId);
-
-
+        List<IssueDTO> issueDTOS = getIssueDTO(jiraIssueResponseDTO);
+        Set<Long> processedIds = new HashSet<>();
+        issueRepository.saveAll(issueDTOS.stream().map(issueDTO -> toDomain(issueDTO, processedIds)).toList());
     }
 
     public List<IssueDTO> getIssueDTO(JiraIssueResponseDTO jiraIssueResponseDTO) {
@@ -63,11 +69,10 @@ public class IssueService {
             issueDTO.setTimeEstimate(jiraIssueResponseDTO1.getFields().getTimeestimate());
             issueDTO.setTimeOriginalEstimate(jiraIssueResponseDTO1.getFields().getTimeoriginalestimate());
             issueDTO.setWorkRatio(jiraIssueResponseDTO1.getFields().getWorkratio());
-            //TODO:
-//            issueDTO.setWorkLog(jiraIssueResponseDTO1.getFields().getWorklog().getTotal());
+            issueDTO.setWorkLog(worklogService.toDTO(nonNull(jiraIssueResponseDTO1.getFields().getWorklog()) ? jiraIssueResponseDTO1.getFields().getWorklog() : new JiraIssueResponseDTO.Worklog()));
             issueDTO.setComponents(jiraIssueResponseDTO1.getFields().getComponents().stream().map(componentService::toDto).toList());
-            issueDTO.setSprint(sprintService.toDto(jiraIssueResponseDTO1.getFields().getSprint()));
-            issueDTO.setEpic(epicService.toDto(jiraIssueResponseDTO1.getFields().getEpic()));
+            issueDTO.setSprint(nonNull(jiraIssueResponseDTO1.getFields().getSprint()) ? sprintService.toDto(jiraIssueResponseDTO1.getFields().getSprint()) : null);
+            issueDTO.setEpic(nonNull(jiraIssueResponseDTO1.getFields().getEpic()) ? epicService.toDto(jiraIssueResponseDTO1.getFields().getEpic()) : null);
 
             Issue parent = findIssueById(Long.parseLong(jiraIssueResponseDTO1.getFields().getParent().getId()));
             if (nonNull(parent)) {
@@ -77,7 +82,7 @@ public class IssueService {
             }
         });
 
-        return null;
+        return issueDTOS;
     }
 
     public Issue findIssueById(Long id) {
@@ -98,5 +103,25 @@ public class IssueService {
         IssueDTO issueDTO = new IssueDTO();
         BeanUtils.copyProperties(issue, issueDTO);
         return issueDTO;
+    }
+
+    public Issue toDomain(IssueDTO issueDTO, Set<Long> processedIds) {
+        if (processedIds.contains(issueDTO.getId())) {
+            return null;
+        }
+
+        processedIds.add(issueDTO.getId());
+        Issue issue = new Issue();
+        BeanUtils.copyProperties(issueDTO, issue);
+        issue.setComponents(issueDTO.getComponents().stream().map(componentService::toDomain).toList());
+        issue.setSprint(sprintService.toDomain(issueDTO.getSprint()));
+        issue.setEpic(epicService.toDomain(issueDTO.getEpic()));
+
+        if (issueDTO.getParent() != null) {
+            issue.setParent(toDomain(issueDTO.getParent(), processedIds));
+        }
+
+        issue.setWorklog(worklogService.toDomain(issueDTO.getWorkLog()));
+        return issue;
     }
 }

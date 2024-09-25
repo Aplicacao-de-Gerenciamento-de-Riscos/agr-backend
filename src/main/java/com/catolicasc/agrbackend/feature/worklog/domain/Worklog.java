@@ -30,13 +30,7 @@ public class Worklog {
     @Column(name = "total")
     private Integer total;
 
-    @JoinTable(name = "tb_worklog_entry",
-            joinColumns = @JoinColumn(name = "cod_worklog"),
-            inverseJoinColumns = @JoinColumn(name = "cod_worklog_entry"))
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "worklog")
     private List<WorklogEntry> worklogEntries;
 
-    @JoinColumn(name = "cod_issue")
-    @ManyToOne
-    private Issue issue;
 }

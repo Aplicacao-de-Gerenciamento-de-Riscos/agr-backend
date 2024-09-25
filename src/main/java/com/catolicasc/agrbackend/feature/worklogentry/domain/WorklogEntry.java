@@ -1,5 +1,6 @@
 package com.catolicasc.agrbackend.feature.worklogentry.domain;
 
+import com.catolicasc.agrbackend.feature.worklog.domain.Worklog;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -32,4 +33,8 @@ public class WorklogEntry {
 
     @Column(name = "time_spent")
     private String timeSpent;
+
+    @ManyToOne
+    @JoinColumn(name = "cod_worklog")
+    private Worklog worklog;
 }

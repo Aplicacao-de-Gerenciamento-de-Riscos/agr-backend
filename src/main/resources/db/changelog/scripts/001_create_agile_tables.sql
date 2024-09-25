@@ -57,9 +57,17 @@ CREATE TABLE tb_issue_components (
                                      CONSTRAINT fk_component FOREIGN KEY (cod_component) REFERENCES tb_component(cod_component)
 );
 
+-- Sequência: seq_worklog
+CREATE SEQUENCE seq_worklog
+    INCREMENT 1
+    START 1
+    MINVALUE 1
+    MAXVALUE 9223372036854775807
+    CACHE 1;
+
 -- Tabela: tb_worklog
 CREATE TABLE tb_worklog (
-                           cod_worklog BIGINT PRIMARY KEY,
+                            cod_worklog BIGINT PRIMARY KEY DEFAULT nextval('seq_worklog'),
                             start_at INTEGER,
                             max_results INTEGER,
                             total INTEGER,
@@ -67,21 +75,22 @@ CREATE TABLE tb_worklog (
                             CONSTRAINT fk_issue FOREIGN KEY (cod_issue) REFERENCES tb_issue(cod_issue)
 );
 
+-- Sequência: seq_worklog_entry
+CREATE SEQUENCE seq_worklog_entry
+    INCREMENT 1
+    START 1
+    MINVALUE 1
+    MAXVALUE 9223372036854775807
+    CACHE 1;
+
 -- Tabela: tb_worklog_entry
 CREATE TABLE tb_worklog_entry (
-                                 cod_worklog_entry BIGINT PRIMARY KEY,
-                                 self VARCHAR(255),
-                                 author VARCHAR(255),
-                                 created VARCHAR(255),
-                                 updated VARCHAR(255),
-                                 time_spent VARCHAR(255)
-);
-
--- Tabela: tb_worklog_worklog_entry (tabela de relacionamento)
-CREATE TABLE tb_worklog_worklog_entry (
-                                         cod_worklog BIGINT,
-                                         cod_worklog_entry BIGINT,
-                                         PRIMARY KEY (cod_worklog, cod_worklog_entry),
-                                         CONSTRAINT fk_worklog FOREIGN KEY (cod_worklog) REFERENCES tb_worklog(cod_worklog),
-                                         CONSTRAINT fk_worklog_entry FOREIGN KEY (cod_worklog_entry) REFERENCES tb_worklog_entry(cod_worklog_entry)
+                                  cod_worklog_entry BIGINT PRIMARY KEY DEFAULT nextval('seq_worklog_entry'),
+                                  self VARCHAR(255),
+                                  author VARCHAR(255),
+                                  created VARCHAR(255),
+                                  updated VARCHAR(255),
+                                  time_spent VARCHAR(255),
+                                  cod_worklog BIGINT,
+                                  CONSTRAINT fk_worklog FOREIGN KEY (cod_worklog) REFERENCES tb_worklog(cod_worklog)
 );

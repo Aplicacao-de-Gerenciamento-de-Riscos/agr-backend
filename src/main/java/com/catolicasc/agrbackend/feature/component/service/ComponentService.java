@@ -24,7 +24,8 @@ public class ComponentService {
             componentDTO.setId(componentDomain.getId());
             componentDTO.setName(componentDomain.getName());
         } else {
-            Component component1 = componentRepository.save(toDomain(component));
+            Component componentDomain1 = toDomain(component);
+            Component component1 = componentRepository.save(componentDomain1);
             componentDTO.setId(component1.getId());
             componentDTO.setName(component1.getName());
         }
@@ -33,9 +34,16 @@ public class ComponentService {
 
     public Component toDomain(JiraIssueResponseDTO.Component component) {
         Component componentDomain = new Component();
-        component.setId(component.getId());
-        component.setName(component.getName());
+        componentDomain.setId(Long.parseLong(component.getId()));
+        componentDomain.setName(component.getName());
         return componentDomain;
+    }
+
+    public Component toDomain(ComponentDTO componentDTO) {
+        Component component = new Component();
+        component.setId(componentDTO.getId());
+        component.setName(componentDTO.getName());
+        return component;
     }
 
     public Component findById(Long id) {
