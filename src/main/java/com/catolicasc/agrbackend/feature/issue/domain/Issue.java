@@ -83,7 +83,7 @@ public class Issue {
     @ManyToOne
     private Issue parent;
 
-    @JoinColumn(name = "cod_worklog")
+    @JoinColumn(name = "cod_worklog", referencedColumnName = "cod_worklog")
     @OneToOne
     private Worklog worklog;
 

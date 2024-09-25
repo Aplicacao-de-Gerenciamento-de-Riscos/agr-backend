@@ -74,11 +74,13 @@ public class IssueService {
             issueDTO.setSprint(nonNull(jiraIssueResponseDTO1.getFields().getSprint()) ? sprintService.toDto(jiraIssueResponseDTO1.getFields().getSprint()) : null);
             issueDTO.setEpic(nonNull(jiraIssueResponseDTO1.getFields().getEpic()) ? epicService.toDto(jiraIssueResponseDTO1.getFields().getEpic()) : null);
 
-            Issue parent = findIssueById(Long.parseLong(jiraIssueResponseDTO1.getFields().getParent().getId()));
-            if (nonNull(parent)) {
-                issueDTO.setParent(toDto(parent));
-            } else {
-                issueDTO.setParent(toDto(issueRepository.save(getIssueByParent(jiraIssueResponseDTO1.getFields().getParent()))));
+            if (nonNull(jiraIssueResponseDTO1.getFields().getParent())) {
+                Issue parent = findIssueById(Long.parseLong(jiraIssueResponseDTO1.getFields().getParent().getId()));
+                if (nonNull(parent)) {
+                    issueDTO.setParent(toDto(parent));
+                } else {
+                    issueDTO.setParent(toDto(issueRepository.save(getIssueByParent(jiraIssueResponseDTO1.getFields().getParent()))));
+                }
             }
         });
 

@@ -31,10 +31,3 @@ public class WorklogEntry {
     @Column(name = "updated")
     private String updated;
 
-    @Column(name = "time_spent")
-    private String timeSpent;
-
-    @ManyToOne
-    @JoinColumn(name = "cod_worklog")
-    private Worklog worklog;
-}

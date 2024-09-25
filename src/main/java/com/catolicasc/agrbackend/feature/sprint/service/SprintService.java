@@ -23,8 +23,8 @@ public class SprintService {
 
     public Sprint toDomain(JiraIssueResponseDTO.Sprint sprint) {
         Sprint sprintDomain = new Sprint();
-        sprint.setId(sprint.getId());
-        sprint.setName(sprint.getName());
+        sprintDomain.setId(Long.parseLong(sprint.getId()));
+        sprintDomain.setName(sprint.getName());
         return sprintDomain;
     }
 
@@ -42,7 +42,8 @@ public class SprintService {
             sprintDTO.setId(sprintDomain.getId());
             sprintDTO.setName(sprintDomain.getName());
         } else {
-            Sprint sprint1 = sprintRepository.save(toDomain(sprint));
+            Sprint sprintDomain1 = toDomain(sprint);
+            Sprint sprint1 = sprintRepository.save(sprintDomain1);
             sprintDTO.setId(sprint1.getId());
             sprintDTO.setName(sprint1.getName());
         }

@@ -42,7 +42,8 @@ public class EpicService {
             epicDTO.setId(epicDomain.getId());
             epicDTO.setName(epicDomain.getName());
         } else {
-            Epic epic1 = epicRepository.save(toDomain(epic));
+            Epic epicDomain1 = toDomain(epic);
+            Epic epic1 = epicRepository.save(epicDomain1);
             epicDTO.setId(epic1.getId());
             epicDTO.setName(epic1.getName());
         }
