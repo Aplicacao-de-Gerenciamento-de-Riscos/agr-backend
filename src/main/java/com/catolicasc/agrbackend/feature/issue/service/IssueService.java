@@ -82,6 +82,8 @@ public class IssueService {
                     issueDTO.setParent(toDto(issueRepository.save(getIssueByParent(jiraIssueResponseDTO1.getFields().getParent()))));
                 }
             }
+
+            issueDTOS.add(issueDTO);
         });
 
         return issueDTOS;
@@ -115,15 +117,15 @@ public class IssueService {
         processedIds.add(issueDTO.getId());
         Issue issue = new Issue();
         BeanUtils.copyProperties(issueDTO, issue);
-        issue.setComponents(issueDTO.getComponents().stream().map(componentService::toDomain).toList());
-        issue.setSprint(sprintService.toDomain(issueDTO.getSprint()));
-        issue.setEpic(epicService.toDomain(issueDTO.getEpic()));
+        issue.setComponents(nonNull(issueDTO.getComponents()) ? issueDTO.getComponents().stream().map(componentService::toDomain).toList() : null);
+        issue.setSprint(nonNull(issueDTO.getSprint()) ? sprintService.toDomain(issueDTO.getSprint()) : null);
+        issue.setEpic(nonNull(issue.getEpic()) ? epicService.toDomain(issueDTO.getEpic()) : null);
+        issue.setWorklog(nonNull(issueDTO.getWorklog()) ? worklogService.toDomain(issueDTO.getWorklog()) : null);
 
         if (issueDTO.getParent() != null) {
             issue.setParent(toDomain(issueDTO.getParent(), processedIds));
         }
 
-        issue.setWorklog(worklogService.toDomain(issueDTO.getWorkLog()));
         return issue;
     }
 }
