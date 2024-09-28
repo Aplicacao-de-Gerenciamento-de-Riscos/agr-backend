@@ -69,7 +69,7 @@ public class IssueService {
             issueDTO.setTimeEstimate(jiraIssueResponseDTO1.getFields().getTimeestimate());
             issueDTO.setTimeOriginalEstimate(jiraIssueResponseDTO1.getFields().getTimeoriginalestimate());
             issueDTO.setWorkRatio(jiraIssueResponseDTO1.getFields().getWorkratio());
-            issueDTO.setWorkLog(worklogService.toDTO(nonNull(jiraIssueResponseDTO1.getFields().getWorklog()) ? jiraIssueResponseDTO1.getFields().getWorklog() : new JiraIssueResponseDTO.Worklog()));
+            issueDTO.setWorklog(worklogService.toDTO(nonNull(jiraIssueResponseDTO1.getFields().getWorklog()) ? jiraIssueResponseDTO1.getFields().getWorklog() : new JiraIssueResponseDTO.Worklog()));
             issueDTO.setComponents(jiraIssueResponseDTO1.getFields().getComponents().stream().map(componentService::toDto).toList());
             issueDTO.setSprint(nonNull(jiraIssueResponseDTO1.getFields().getSprint()) ? sprintService.toDto(jiraIssueResponseDTO1.getFields().getSprint()) : null);
             issueDTO.setEpic(nonNull(jiraIssueResponseDTO1.getFields().getEpic()) ? epicService.toDto(jiraIssueResponseDTO1.getFields().getEpic()) : null);

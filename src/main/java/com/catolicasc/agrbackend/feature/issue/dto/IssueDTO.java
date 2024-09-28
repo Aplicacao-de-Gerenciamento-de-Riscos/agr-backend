@@ -17,7 +17,6 @@ public class IssueDTO {
     private Long timeOriginalEstimate;
     private Long timeEstimate;
     private Long workRatio;
-    private WorklogDTO workLog;
     private String status;
     private Long timespent;
     private LocalDateTime resolutionDate;

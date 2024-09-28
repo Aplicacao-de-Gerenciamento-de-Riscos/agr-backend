@@ -33,7 +33,9 @@ public class WorklogService {
         worklogDTO.setWorklogEntries(worklogEntriesDTO);
 
         Worklog worklogDomain = toDomain(worklogDTO);
-        worklogRepository.save(worklogDomain);
+        Worklog worklog1 = worklogRepository.save(worklogDomain);
+
+        worklogDTO.setId(worklog1.getId());
 
         return worklogDTO;
     }
@@ -41,6 +43,7 @@ public class WorklogService {
 
     public Worklog toDomain(WorklogDTO worklogDTO) {
         Worklog worklog = new Worklog();
+        worklog.setId(worklogDTO.getId());
         worklog.setTotal(worklogDTO.getTotal());
         worklog.setMaxResults(worklogDTO.getMaxResults());
         worklog.setStartAt(worklogDTO.getStartAt());
