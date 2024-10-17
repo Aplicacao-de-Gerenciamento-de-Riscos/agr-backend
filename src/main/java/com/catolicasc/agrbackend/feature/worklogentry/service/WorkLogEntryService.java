@@ -1,9 +1,11 @@
 package com.catolicasc.agrbackend.feature.worklogentry.service;
 
 import com.catolicasc.agrbackend.clients.jira.dto.JiraIssueResponseDTO;
+import com.catolicasc.agrbackend.feature.worklog.service.WorklogService;
 import com.catolicasc.agrbackend.feature.worklogentry.domain.WorklogEntry;
 import com.catolicasc.agrbackend.feature.worklogentry.dto.WorklogEntryDTO;
 import com.catolicasc.agrbackend.feature.worklogentry.repository.WorklogEntryRepository;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -13,8 +15,10 @@ import java.util.List;
 public class WorkLogEntryService {
 
     private final WorklogEntryRepository worklogEntryRepository;
+    private final WorklogService worklogService;
 
-    public WorkLogEntryService(WorklogEntryRepository worklogEntryRepository) {
+    public WorkLogEntryService(WorklogEntryRepository worklogEntryRepository, @Lazy WorklogService worklogService) {
+        this.worklogService = worklogService;
         this.worklogEntryRepository = worklogEntryRepository;
     }
 
@@ -28,12 +32,8 @@ public class WorkLogEntryService {
             worklogEntryDTO.setCreated(worklogEntry.getCreated());
             worklogEntryDTO.setUpdated(worklogEntry.getUpdated());
             worklogEntryDTO.setTimeSpent(worklogEntry.getTimeSpent());
-
             worklogEntryDTOS.add(worklogEntryDTO);
         });
-
-        List<WorklogEntry> worklogEntriesDomain = toDomain(worklogEntryDTOS);
-        worklogEntryRepository.saveAll(worklogEntriesDomain);
 
         return worklogEntryDTOS;
     }
@@ -47,8 +47,13 @@ public class WorkLogEntryService {
             worklogEntry.setCreated(worklogEntryDTO.getCreated());
             worklogEntry.setUpdated(worklogEntryDTO.getUpdated());
             worklogEntry.setTimeSpent(worklogEntryDTO.getTimeSpent());
+            worklogEntry.setWorklog(worklogService.toDomain(worklogEntryDTO.getWorklog()));
             worklogEntries.add(worklogEntry);
         });
         return worklogEntries;
+    }
+
+    public void saveAll(List<WorklogEntry> worklogEntries) {
+        worklogEntryRepository.saveAll(worklogEntries);
     }
 }

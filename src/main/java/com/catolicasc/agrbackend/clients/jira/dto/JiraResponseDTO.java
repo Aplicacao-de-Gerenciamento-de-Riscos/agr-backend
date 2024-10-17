@@ -12,5 +12,4 @@ public class JiraResponseDTO {
     private int startAt;
     private int maxResults;
     private int total;
-    private List<JiraIssueResponseDTO> issues;
 }

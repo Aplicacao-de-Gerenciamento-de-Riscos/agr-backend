@@ -37,6 +37,10 @@ public class WorklogService {
 
         worklogDTO.setId(worklog1.getId());
 
+        worklogEntriesDTO.forEach(worklogEntryDTO -> worklogEntryDTO.setWorklog(worklogDTO));
+        List<WorklogEntry> worklogEntries = workLogEntryService.toDomain(worklogEntriesDTO);
+        workLogEntryService.saveAll(worklogEntries);
+
         return worklogDTO;
     }
 
@@ -47,8 +51,6 @@ public class WorklogService {
         worklog.setTotal(worklogDTO.getTotal());
         worklog.setMaxResults(worklogDTO.getMaxResults());
         worklog.setStartAt(worklogDTO.getStartAt());
-        List<WorklogEntry> worklogEntries = workLogEntryService.toDomain(worklogDTO.getWorklogEntries());
-        worklog.setWorklogEntries(worklogEntries);
         return worklog;
     }
 }

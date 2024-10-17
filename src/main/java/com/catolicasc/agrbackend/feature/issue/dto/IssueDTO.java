@@ -4,6 +4,7 @@ import com.catolicasc.agrbackend.feature.component.dto.ComponentDTO;
 import com.catolicasc.agrbackend.feature.epic.dto.EpicDTO;
 import com.catolicasc.agrbackend.feature.issue.domain.Issue;
 import com.catolicasc.agrbackend.feature.sprint.dto.SprintDTO;
+import com.catolicasc.agrbackend.feature.version.dto.VersionDTO;
 import com.catolicasc.agrbackend.feature.worklog.dto.WorklogDTO;
 import lombok.Data;
 
@@ -32,4 +33,5 @@ public class IssueDTO {
     private SprintDTO sprint;
     private IssueDTO parent;
     private WorklogDTO worklog;
+    private List<VersionDTO> version;
 }

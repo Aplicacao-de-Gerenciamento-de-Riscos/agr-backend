@@ -6,6 +6,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @Entity
@@ -21,5 +23,20 @@ public class Sprint {
 
     @Column(name = "name")
     private String name;
+
+    @Column(name = "state")
+    private String state;
+
+    @Column(name = "start_date")
+    private LocalDateTime startDate;
+
+    @Column(name = "end_date")
+    private LocalDateTime endDate;
+
+    @Column(name = "complete_date")
+    private LocalDateTime completeDate;
+
+    @Column(name = "goal")
+    private String goal;
 
 }

@@ -9,11 +9,17 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class JiraIssueResponseDTO extends JiraResponseDTO{
 
-    private String expand;
-    private String id;
-    private String self;
-    private String key;
-    private Fields fields;
+    private List<IssueResponse> issues;
+
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class IssueResponse {
+        private String expand;
+        private String id;
+        private String self;
+        private String key;
+        private Fields fields;
+    }
 
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)

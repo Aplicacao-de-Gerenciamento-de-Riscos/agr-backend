@@ -7,15 +7,19 @@ import com.catolicasc.agrbackend.feature.epic.service.EpicService;
 import com.catolicasc.agrbackend.feature.issue.domain.Issue;
 import com.catolicasc.agrbackend.feature.issue.dto.IssueDTO;
 import com.catolicasc.agrbackend.feature.issue.repository.IssueRepository;
+import com.catolicasc.agrbackend.feature.sprint.domain.Sprint;
 import com.catolicasc.agrbackend.feature.sprint.service.SprintService;
+import com.catolicasc.agrbackend.feature.version.dto.VersionDTO;
+import com.catolicasc.agrbackend.feature.version.service.VersionService;
+import com.catolicasc.agrbackend.feature.versionissue.domain.VersionIssue;
+import com.catolicasc.agrbackend.feature.versionissue.service.VersionIssueService;
 import com.catolicasc.agrbackend.feature.worklog.service.WorklogService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 import static java.util.Objects.nonNull;
 
@@ -28,32 +32,55 @@ public class IssueService {
     private final SprintService sprintService;
     private final EpicService epicService;
     private final WorklogService worklogService;
+    private final VersionService versionService;
+    private final VersionIssueService versionIssueService;
 
     public IssueService(
             IssueRepository issueRepository,
             JiraAPI jiraAPI,
             ComponentService componentService,
-            SprintService sprintService, EpicService epicService, WorklogService worklogService) {
+            SprintService sprintService, EpicService epicService, WorklogService worklogService, VersionService versionService, VersionIssueService versionIssueService) {
         this.issueRepository = issueRepository;
         this.jiraAPI = jiraAPI;
         this.componentService = componentService;
         this.sprintService = sprintService;
         this.epicService = epicService;
         this.worklogService = worklogService;
+        this.versionService = versionService;
+        this.versionIssueService = versionIssueService;
     }
 
     public JiraIssueResponseDTO listIssuesBySprint(String sprintId) {
-        return jiraAPI.listIssuesBySprint(sprintId).getBody();
+        return jiraAPI.listIssuesBySprint(sprintId, 1000L).getBody();
     }
 
-    public void syncIssuesBySprint(String sprintId) {
-        JiraIssueResponseDTO jiraIssueResponseDTO = listIssuesBySprint(sprintId);
-        List<IssueDTO> issueDTOS = getIssueDTO(jiraIssueResponseDTO);
-        Set<Long> processedIds = new HashSet<>();
-        issueRepository.saveAll(issueDTOS.stream().map(issueDTO -> toDomain(issueDTO, processedIds)).toList());
+    public void syncIssuesBySprints() {
+        List<Sprint> sprints = sprintService.findAll();
+        sprints.forEach(sprint -> {
+            JiraIssueResponseDTO jiraIssueResponseDTO = listIssuesBySprint(sprint.getId().toString());
+            List<IssueDTO> issueDTOS = getIssueDTO(jiraIssueResponseDTO, sprint);
+            List<Issue> issues = new ArrayList<>();
+            Set<Long> processedIds = new HashSet<>();
+            issueDTOS.forEach(issueDTO -> {
+                Issue issue = toDomain(issueDTO, processedIds);
+                if (nonNull(issue)) {
+                    issues.add(issue);
+                }
+            });
+            issues.forEach(issue -> {
+                if (nonNull(issue.getVersionIssues()) && !issue.getVersionIssues().isEmpty()) {
+                    List<VersionIssue> versionIssues = issue.getVersionIssues();
+                    issue.setVersionIssues(null);
+                    issueRepository.save(issue);
+                    versionIssueService.saveAll(versionIssues);
+                } else {
+                    issueRepository.save(issue);
+                }
+            });
+        });
     }
 
-    public List<IssueDTO> getIssueDTO(JiraIssueResponseDTO jiraIssueResponseDTO) {
+    public List<IssueDTO> getIssueDTO(JiraIssueResponseDTO jiraIssueResponseDTO, Sprint sprint) {
         List<IssueDTO> issueDTOS = new ArrayList<>();
 
         jiraIssueResponseDTO.getIssues().forEach(jiraIssueResponseDTO1 -> {
@@ -61,7 +88,7 @@ public class IssueService {
             issueDTO.setId(Long.parseLong(jiraIssueResponseDTO1.getId()));
             issueDTO.setKey(jiraIssueResponseDTO1.getKey());
             issueDTO.setStatus(jiraIssueResponseDTO1.getFields().getStatus().getName());
-            issueDTO.setAssignee(jiraIssueResponseDTO1.getFields().getAssignee().getEmailAddress());
+            issueDTO.setAssignee(nonNull(jiraIssueResponseDTO1.getFields().getAssignee()) && nonNull(jiraIssueResponseDTO1.getFields().getAssignee().getEmailAddress()) ? jiraIssueResponseDTO1.getFields().getAssignee().getEmailAddress() : "UNASSIGNED");
             issueDTO.setPriority(jiraIssueResponseDTO1.getFields().getPriority().getName());
             issueDTO.setIssueType(jiraIssueResponseDTO1.getFields().getIssuetype().getName());
             issueDTO.setSummary(jiraIssueResponseDTO1.getFields().getSummary());
@@ -71,8 +98,12 @@ public class IssueService {
             issueDTO.setWorkRatio(jiraIssueResponseDTO1.getFields().getWorkratio());
             issueDTO.setWorklog(worklogService.toDTO(nonNull(jiraIssueResponseDTO1.getFields().getWorklog()) ? jiraIssueResponseDTO1.getFields().getWorklog() : new JiraIssueResponseDTO.Worklog()));
             issueDTO.setComponents(jiraIssueResponseDTO1.getFields().getComponents().stream().map(componentService::toDto).toList());
-            issueDTO.setSprint(nonNull(jiraIssueResponseDTO1.getFields().getSprint()) ? sprintService.toDto(jiraIssueResponseDTO1.getFields().getSprint()) : null);
+            issueDTO.setSprint(sprintService.toDto(sprint));
             issueDTO.setEpic(nonNull(jiraIssueResponseDTO1.getFields().getEpic()) ? epicService.toDto(jiraIssueResponseDTO1.getFields().getEpic()) : null);
+            issueDTO.setResolutionDate(nonNull(jiraIssueResponseDTO1.getFields().getResolutiondate()) ? LocalDateTime.parse(jiraIssueResponseDTO1.getFields().getResolutiondate(), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")) : null);
+            issueDTO.setUpdated(nonNull(jiraIssueResponseDTO1.getFields().getUpdated()) ? LocalDateTime.parse(jiraIssueResponseDTO1.getFields().getUpdated(), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")) : null);
+            issueDTO.setCreated(nonNull(jiraIssueResponseDTO1.getFields().getCreated()) ? LocalDateTime.parse(jiraIssueResponseDTO1.getFields().getCreated(), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")) : null);
+            issueDTO.setFlagged(jiraIssueResponseDTO1.getFields().isFlagged());
 
             if (nonNull(jiraIssueResponseDTO1.getFields().getParent())) {
                 Issue parent = findIssueById(Long.parseLong(jiraIssueResponseDTO1.getFields().getParent().getId()));
@@ -81,6 +112,14 @@ public class IssueService {
                 } else {
                     issueDTO.setParent(toDto(issueRepository.save(getIssueByParent(jiraIssueResponseDTO1.getFields().getParent()))));
                 }
+            }
+
+            if (nonNull(jiraIssueResponseDTO1.getFields().getFixVersions())) {
+                List<VersionDTO> versionDTOS = new ArrayList<>();
+                jiraIssueResponseDTO1.getFields().getFixVersions().forEach(version -> {
+                    versionDTOS.add(versionService.toDTO(versionService.findById(Long.parseLong(version.getId()))));
+                });
+                issueDTO.setVersion(versionDTOS);
             }
 
             issueDTOS.add(issueDTO);
@@ -119,8 +158,17 @@ public class IssueService {
         BeanUtils.copyProperties(issueDTO, issue);
         issue.setComponents(nonNull(issueDTO.getComponents()) ? issueDTO.getComponents().stream().map(componentService::toDomain).toList() : null);
         issue.setSprint(nonNull(issueDTO.getSprint()) ? sprintService.toDomain(issueDTO.getSprint()) : null);
-        issue.setEpic(nonNull(issue.getEpic()) ? epicService.toDomain(issueDTO.getEpic()) : null);
+        issue.setEpic(nonNull(issueDTO.getEpic()) ? epicService.toDomain(issueDTO.getEpic()) : null);
         issue.setWorklog(nonNull(issueDTO.getWorklog()) ? worklogService.toDomain(issueDTO.getWorklog()) : null);
+
+        if (nonNull(issueDTO.getVersion()) && !issueDTO.getVersion().isEmpty()) {
+            List<VersionIssue> versionIssues = new ArrayList<>();
+            issueDTO.getVersion().forEach(versionDTO -> {
+                VersionIssue versionIssue = VersionIssue.builder().issue(issue).version(versionService.findById(versionDTO.getId())).build();
+                versionIssues.add(versionIssue);
+            });
+            issue.setVersionIssues(versionIssues);
+        }
 
         if (issueDTO.getParent() != null) {
             issue.setParent(toDomain(issueDTO.getParent(), processedIds));

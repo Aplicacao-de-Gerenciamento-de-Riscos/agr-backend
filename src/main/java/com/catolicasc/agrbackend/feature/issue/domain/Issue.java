@@ -3,6 +3,7 @@ package com.catolicasc.agrbackend.feature.issue.domain;
 import com.catolicasc.agrbackend.feature.component.domain.Component;
 import com.catolicasc.agrbackend.feature.epic.domain.Epic;
 import com.catolicasc.agrbackend.feature.sprint.domain.Sprint;
+import com.catolicasc.agrbackend.feature.versionissue.domain.VersionIssue;
 import com.catolicasc.agrbackend.feature.worklog.domain.Worklog;
 import jakarta.persistence.*;
 import lombok.*;
@@ -86,5 +87,8 @@ public class Issue {
     @JoinColumn(name = "cod_worklog", referencedColumnName = "cod_worklog")
     @OneToOne
     private Worklog worklog;
+
+    @OneToMany
+    private List<VersionIssue> versionIssues;
 
 }
