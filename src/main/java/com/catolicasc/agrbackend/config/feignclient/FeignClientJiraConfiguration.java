@@ -41,9 +41,7 @@ public class FeignClientJiraConfiguration {
     @Bean
     public ObjectMapper objectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
-        // Ignora propriedades desconhecidas no JSON
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        // Opcional: Ignora erros em campos específicos
         objectMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
         return objectMapper;
     }
