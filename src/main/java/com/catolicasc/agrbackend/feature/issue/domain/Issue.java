@@ -85,10 +85,11 @@ public class Issue {
     private Issue parent;
 
     @JoinColumn(name = "cod_worklog", referencedColumnName = "cod_worklog")
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     private Worklog worklog;
 
-    @OneToMany
+    //Anotação orphanRemoval para que VersionIssues antigos sejam removidos quando não estiverem mais associados a uma Issue
+    @OneToMany(mappedBy = "issue", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<VersionIssue> versionIssues;
 
 }

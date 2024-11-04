@@ -4,7 +4,6 @@ import com.catolicasc.agrbackend.feature.issue.domain.Issue;
 import com.catolicasc.agrbackend.feature.version.domain.Version;
 import jakarta.persistence.*;
 import lombok.*;
-
 @Getter
 @Setter
 @Entity

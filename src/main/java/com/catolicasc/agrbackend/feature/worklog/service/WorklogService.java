@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static java.util.Objects.nonNull;
+
 @Service
 public class WorklogService {
 
@@ -22,35 +24,32 @@ public class WorklogService {
         this.workLogEntryService = workLogEntryService;
     }
 
+    public Worklog findById(Long id) {
+        return worklogRepository.findById(id).orElse(null);
+    }
+
     public WorklogDTO toDTO(JiraIssueResponseDTO.Worklog worklog) {
         WorklogDTO worklogDTO = new WorklogDTO();
         worklogDTO.setTotal(worklog.getTotal());
         worklogDTO.setMaxResults(worklog.getMaxResults());
         worklogDTO.setStartAt(worklog.getStartAt());
 
+        // Converte os Worklog Entries
         List<WorklogEntryDTO> worklogEntriesDTO = workLogEntryService.toDTOS(worklog.getWorklogs());
-
         worklogDTO.setWorklogEntries(worklogEntriesDTO);
-
-        Worklog worklogDomain = toDomain(worklogDTO);
-        Worklog worklog1 = worklogRepository.save(worklogDomain);
-
-        worklogDTO.setId(worklog1.getId());
-
-        worklogEntriesDTO.forEach(worklogEntryDTO -> worklogEntryDTO.setWorklog(worklogDTO));
-        List<WorklogEntry> worklogEntries = workLogEntryService.toDomain(worklogEntriesDTO);
-        workLogEntryService.saveAll(worklogEntries);
 
         return worklogDTO;
     }
 
-
     public Worklog toDomain(WorklogDTO worklogDTO) {
         Worklog worklog = new Worklog();
-        worklog.setId(worklogDTO.getId());
         worklog.setTotal(worklogDTO.getTotal());
         worklog.setMaxResults(worklogDTO.getMaxResults());
         worklog.setStartAt(worklogDTO.getStartAt());
         return worklog;
+    }
+
+    public Worklog save(Worklog worklog) {
+        return worklogRepository.save(worklog);
     }
 }

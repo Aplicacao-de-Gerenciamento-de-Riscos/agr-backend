@@ -4,6 +4,7 @@ import com.catolicasc.agrbackend.clients.jira.dto.JiraIssueResponseDTO;
 import com.catolicasc.agrbackend.feature.epic.domain.Epic;
 import com.catolicasc.agrbackend.feature.epic.dto.EpicDTO;
 import com.catolicasc.agrbackend.feature.epic.repository.EpicRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -11,9 +12,7 @@ public class EpicService {
 
     private final EpicRepository epicRepository;
 
-    public EpicService(
-        EpicRepository epicRepository
-    ) {
+    public EpicService(EpicRepository epicRepository) {
         this.epicRepository = epicRepository;
     }
 
@@ -21,33 +20,35 @@ public class EpicService {
         return epicRepository.findById(id).orElse(null);
     }
 
+    public Epic toDomain(EpicDTO epicDTO) {
+        Epic epic = new Epic();
+        epic.setId(epicDTO.getId());
+        epic.setName(epicDTO.getName());
+        epic.setSummary(epicDTO.getSummary());
+        epic.setKey(epicDTO.getKey());
+        return epic;
+    }
+
     public Epic toDomain(JiraIssueResponseDTO.Epic epic) {
+        Epic existingEpic = findById(Long.parseLong(epic.getId()));
+        if (existingEpic != null) {
+            return existingEpic;
+        }
+
         Epic epicDomain = new Epic();
         epicDomain.setId(Long.parseLong(epic.getId()));
         epicDomain.setName(epic.getName());
         return epicDomain;
     }
 
-    public Epic toDomain(EpicDTO epicDTO) {
-        Epic epic = new Epic();
-        epic.setId(epicDTO.getId());
-        epic.setName(epicDTO.getName());
-        return epic;
-    }
-
-    public EpicDTO toDto(JiraIssueResponseDTO.Epic epic) {
-        Epic epicDomain = findById(Long.parseLong(epic.getId()));
+    public EpicDTO toDto(JiraIssueResponseDTO.Epic epicResponseDTO) {
         EpicDTO epicDTO = new EpicDTO();
-        if (epicDomain != null) {
-            epicDTO.setId(epicDomain.getId());
-            epicDTO.setName(epicDomain.getName());
-        } else {
-            Epic epicDomain1 = toDomain(epic);
-            Epic epic1 = epicRepository.save(epicDomain1);
-            epicDTO.setId(epic1.getId());
-            epicDTO.setName(epic1.getName());
-        }
-
+        epicDTO.setId(Long.parseLong(epicResponseDTO.getId()));
+        epicDTO.setName(epicResponseDTO.getName());
+        epicDTO.setSummary(epicResponseDTO.getSummary());
+        epicDTO.setKey(epicResponseDTO.getKey());
         return epicDTO;
     }
-}
+
+    @Transactional
+    public Epic findOrCreateEpic(EpicDTO ep

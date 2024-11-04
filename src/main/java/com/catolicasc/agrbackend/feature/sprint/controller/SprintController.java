@@ -27,7 +27,7 @@ public class SprintController {
     private ProjectService projectService;
 
     @GetMapping("/sync")
-    public ResponseEntity<Response> syncIssuesBySprint() {
+    public ResponseEntity<Response> syncSprints() {
         List<Project> projects = projectService.findAll();
         versionService.syncVersions(projects);
         projects.forEach(project -> sprintService.syncSprintsByBoard(project.getBoardId().toString()));
