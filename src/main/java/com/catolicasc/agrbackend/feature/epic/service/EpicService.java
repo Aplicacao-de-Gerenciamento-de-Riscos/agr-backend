@@ -51,4 +51,18 @@ public class EpicService {
     }
 
     @Transactional
-    public Epic findOrCreateEpic(EpicDTO ep
+    public Epic findOrCreateEpic(EpicDTO epicDTO) {
+        Long epicId = epicDTO.getId();
+        Epic epic = epicRepository.findById(epicId).orElse(null);
+        if (epic == null) {
+            epic = new Epic();
+            epic.setId(epicId);
+            epic.setName(epicDTO.getName());
+            epic.setSummary(epicDTO.getSummary());
+            epic.setKey(epicDTO.getKey());
+            epic = epicRepository.save(epic);
+        }
+        return epic;
+    }
+
+}
