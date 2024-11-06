@@ -127,4 +127,8 @@ public class VersionService {
         }
     }
 
+    public VersionDTO getVersionDTO(Long versionId) {
+        return toDTO(findById(versionId));
+    }
+
 }

@@ -176,4 +176,8 @@ public class SprintService {
         }
     }
 
+    public SprintDTO getSprintDTO(Long sprintId) {
+        return toDto(findById(sprintId));
+    }
+
 }
