@@ -1,6 +1,7 @@
 package com.catolicasc.agrbackend.feature.issue.repository;
 
 import com.catolicasc.agrbackend.feature.issue.domain.Issue;
+import com.catolicasc.agrbackend.feature.issue.dto.IssuePlanningDTO;
 import com.catolicasc.agrbackend.feature.issue.dto.IssueTypeDonePercentageDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -28,4 +29,22 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
             "GROUP BY i.issueType")
     List<IssueTypeDonePercentageDTO> findDonePercentageByIssueType(@Param("codVersion") Long codVersion,
                                                                    @Param("codSprint") Long codSprint);
+
+    /**
+     * Recupera a quantidade de issues marcadas como 'DONE', a quantidade de issues marcadas em qualquer outro estado, e a quantidade de issues totais por sprint ou versão.
+     *
+     * @param codVersion o ID da versão para filtrar (pode ser nulo)
+     * @param codSprint o ID do sprint para filtrar (pode ser nulo)
+     * @return um objeto WorkPlanningVarianceDTO contendo as quantidades de issues
+     */
+    @Query("SELECT new com.catolicasc.agrbackend.feature.issue.dto.IssuePlanningDTO(" +
+            "SUM(CASE WHEN i.status = 'Done' THEN 1 ELSE 0 END), " +
+            "SUM(CASE WHEN i.status != 'Done' THEN 1 ELSE 0 END), " +
+            "COUNT(i)) " +
+            "FROM Issue i " +
+            "LEFT JOIN VersionIssue vi ON i.id = vi.issue.id " +
+            "WHERE (:codVersion IS NULL OR vi.version.id = :codVersion) " +
+            "AND (:codSprint IS NULL OR i.id = :codSprint)")
+    IssuePlanningDTO findWorkPlanningVariance(@Param("codVersion") Long codVersion,
+                                              @Param("codSprint") Long codSprint);
 }
