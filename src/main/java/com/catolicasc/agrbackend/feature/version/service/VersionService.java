@@ -24,52 +24,27 @@ public class VersionService {
 
     private final VersionRepository versionRepository;
     private final JiraAPI jiraAPI;
-    private final ProjectService projectService;
 
-    public VersionService(VersionRepository versionRepository, JiraAPI jiraAPI, ProjectService projectService) {
+    public VersionService(VersionRepository versionRepository, JiraAPI jiraAPI) {
         this.versionRepository = versionRepository;
         this.jiraAPI = jiraAPI;
-        this.projectService = projectService;
     }
 
-    public List<Version> findAll() {
-        return versionRepository.findAll();
-    }
-
+    /**
+     * Busca um versão no banco de dados
+     *
+     * @param id Identificador da versão
+     * @return Versão
+     */
     public Version findById(Long id) {
         return versionRepository.findById(id).orElseThrow(RuntimeException::new);
     }
 
-    public CompletableFuture<Void> syncVersionsAsync(List<Project> projects) {
-        return CompletableFuture.allOf(
-                projects.stream()
-                        .map(project -> CompletableFuture.runAsync(() -> {
-                            List<JiraVersionResponseDTO> jiraVersionResponseDTOS = jiraAPI.listVersionsByProject(project.getKey()).getBody();
-                            assert jiraVersionResponseDTOS != null;
-
-                            List<CompletableFuture<Void>> futures = jiraVersionResponseDTOS.stream()
-                                    .map(versionResponse -> CompletableFuture.runAsync(() -> {
-                                        VersionDTO versionDTO = toDTO(versionResponse);
-                                        Version version = versionRepository.findById(versionDTO.getId()).orElse(null);
-
-                                        if (nonNull(version)) {
-                                            updateVersionIfChanged(version, versionDTO);
-                                        } else {
-                                            version = toDomain(versionDTO);
-                                            version.setProject(project);
-                                        }
-
-                                        versionRepository.save(version); // Salva no banco de forma assíncrona
-                                    }))
-                                    .toList();
-
-                            // Espera que todas as operações assíncronas para as versões terminem
-                            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-                        }))
-                        .toArray(CompletableFuture[]::new)
-        );
-    }
-
+    /**
+     * Sincroniza as versões de um projeto com o Jira
+     *
+     * @param projects Lista de projetos
+     */
     public void syncVersions(List<Project> projects) {
         projects.forEach(project -> {
             List<JiraVersionResponseDTO> jiraVersionResponseDTOS = jiraAPI.listVersionsByProject(project.getKey()).getBody();
@@ -88,18 +63,36 @@ public class VersionService {
         });
     }
 
+    /**
+     * Converte um VersionDTO para um Version
+     *
+     * @param versionDTO Objeto retornado pela API do Jira
+     * @return Version convertido
+     */
     public Version toDomain(VersionDTO versionDTO) {
         Version version = new Version();
         BeanUtils.copyProperties(versionDTO, version);
         return version;
     }
 
+    /**
+     * Converte um Version para um VersionDTO
+     *
+     * @param version Objeto retornado pela API do Jira
+     * @return VersionDTO convertido
+     */
     public VersionDTO toDTO(Version version) {
         VersionDTO versionDTO = new VersionDTO();
         BeanUtils.copyProperties(version, versionDTO);
         return versionDTO;
     }
 
+    /**
+     * Converte um JiraVersionResponseDTO para um VersionDTO
+     *
+     * @param jiraVersionResponseDTO Objeto retornado pela API do Jira
+     * @return VersionDTO convertido
+     */
     private VersionDTO toDTO(JiraVersionResponseDTO jiraVersionResponseDTO) {
         VersionDTO versionDTO = new VersionDTO();
         BeanUtils.copyProperties(jiraVersionResponseDTO, versionDTO);
@@ -109,6 +102,12 @@ public class VersionService {
         return versionDTO;
     }
 
+    /**
+     * Atualiza os atributos de uma versão caso tenham sido alterados
+     *
+     * @param version    Versão a ser atualizada
+     * @param versionDTO Versão com os novos valores
+     */
     private void updateVersionIfChanged(Version version, VersionDTO versionDTO) {
         updatePropertyIfChanged(version::getDescription, version::setDescription, versionDTO.getDescription());
         updatePropertyIfChanged(version::getName, version::setName, versionDTO.getName());
@@ -121,12 +120,26 @@ public class VersionService {
         updatePropertyIfChanged(version::getUserReleaseDate, version::setUserReleaseDate, versionDTO.getUserReleaseDate());
     }
 
+    /**
+     * Atualiza uma propriedade caso o valor seja diferente
+     *
+     * @param getter   Método para obter o valor atual
+     * @param setter   Método para definir o novo valor
+     * @param newValue Novo valor
+     * @param <T>      Tipo do valor
+     */
     private <T> void updatePropertyIfChanged(Supplier<T> getter, Consumer<T> setter, T newValue) {
         if (nonNull(newValue) && !Objects.equals(getter.get(), newValue)) {
             setter.accept(newValue);
         }
     }
 
+    /**
+     * Busca uma versão no banco de dados, caso não exista, cria uma nova
+     *
+     * @param versionId
+     * @return
+     */
     public VersionDTO getVersionDTO(Long versionId) {
         return toDTO(findById(versionId));
     }

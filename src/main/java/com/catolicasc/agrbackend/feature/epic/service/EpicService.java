@@ -16,31 +16,11 @@ public class EpicService {
         this.epicRepository = epicRepository;
     }
 
-    public Epic findById(Long id) {
-        return epicRepository.findById(id).orElse(null);
-    }
-
-    public Epic toDomain(EpicDTO epicDTO) {
-        Epic epic = new Epic();
-        epic.setId(epicDTO.getId());
-        epic.setName(epicDTO.getName());
-        epic.setSummary(epicDTO.getSummary());
-        epic.setKey(epicDTO.getKey());
-        return epic;
-    }
-
-    public Epic toDomain(JiraIssueResponseDTO.Epic epic) {
-        Epic existingEpic = findById(Long.parseLong(epic.getId()));
-        if (existingEpic != null) {
-            return existingEpic;
-        }
-
-        Epic epicDomain = new Epic();
-        epicDomain.setId(Long.parseLong(epic.getId()));
-        epicDomain.setName(epic.getName());
-        return epicDomain;
-    }
-
+    /**
+     * Converte um EpicDTO para um Epic
+     * @param epicResponseDTO Objeto retornado pela API do Jira
+     * @return EpicDTO convertido
+     */
     public EpicDTO toDto(JiraIssueResponseDTO.Epic epicResponseDTO) {
         EpicDTO epicDTO = new EpicDTO();
         epicDTO.setId(Long.parseLong(epicResponseDTO.getId()));
@@ -50,6 +30,11 @@ public class EpicService {
         return epicDTO;
     }
 
+    /**
+     * Busca um épico no banco de dados, caso não exista, cria um novo
+     * @param epicDTO
+     * @return
+     */
     @Transactional
     public Epic findOrCreateEpic(EpicDTO epicDTO) {
         Long epicId = epicDTO.getId();

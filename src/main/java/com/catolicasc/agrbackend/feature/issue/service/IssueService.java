@@ -43,7 +43,6 @@ public class IssueService {
     private final EpicService epicService;
     private final WorklogService worklogService;
     private final VersionService versionService;
-    private final VersionIssueService versionIssueService;
     private final WorkLogEntryService workLogEntryService;
 
     public IssueService(
@@ -62,7 +61,6 @@ public class IssueService {
         this.epicService = epicService;
         this.worklogService = worklogService;
         this.versionService = versionService;
-        this.versionIssueService = versionIssueService;
         this.workLogEntryService = workLogEntryService;
     }
 
@@ -70,23 +68,33 @@ public class IssueService {
         return jiraAPI.listIssuesBySprint(sprintId, 1000L).getBody();
     }
 
-    // Removemos o método assíncrono syncIssuesBySprintsAsync()
-
+    /**
+     * Sincroniza todas as Issues de todos os Sprints
+     */
     public void syncIssuesBySprints() {
         List<Sprint> sprints = sprintService.findAll();
         sprints.forEach(this::syncIssuesBySprint);
     }
 
+    /**
+     * Sincroniza todas as Issues de um Sprint específico
+     *
+     * @param sprint Sprint a ser sincronizado
+     */
     public void syncIssuesBySprint(Sprint sprint) {
         JiraIssueResponseDTO jiraIssueResponseDTO = listIssuesBySprint(sprint.getId().toString());
-        List<IssueDTO> issueDTOS = getIssueDTO(jiraIssueResponseDTO, sprint);
+        List<IssueDTO> issueDTOS = getIssueDTO(jiraIssueResponseDTO, sprint); // Converte a resposta da API do Jira em uma lista de IssueDTO
 
         // Processamento sequencial das IssueDTOs
         issueDTOS.forEach(this::processIssueDTO);
     }
 
     private void processIssueDTO(IssueDTO issueDTO) {
+        // Evita processar a mesma Issue mais de uma vez
+        // Cria uma lista de IDs processados
         Set<Long> processedIds = new HashSet<>();
+
+        // Processa a IssueDTO recursivamente
         processIssueDTORecursive(issueDTO, processedIds);
     }
 
@@ -103,10 +111,15 @@ public class IssueService {
 
         Issue existingIssue = issueRepository.findById(issueDTO.getId()).orElse(null);
 
+        // Verifica se a issue já existe no banco de dados
         if (nonNull(existingIssue)) {
+            // Atualiza a issue existente
             updateIssueIfChanged(existingIssue, issueDTO);
+            // Atualiza a lista de versões da issue
             updateIssueVersionIssues(existingIssue, issueDTO);
+            // Salva a issue atualizada
             issueRepository.save(existingIssue);
+            // Processa o worklog da issue
             proccessIssueWorklog(existingIssue, issueDTO);
         } else {
             Issue newIssue = toDomain(issueDTO, processedIds);
@@ -145,7 +158,7 @@ public class IssueService {
             issue.setVersionIssues(new ArrayList<>());
         }
 
-        // Limpa o conteúdo da coleção existente sem alterar sua referência
+        // Limpa o conteúdo da lista de versões existentes sem alterar sua referência
         issue.getVersionIssues().clear();
 
         // Adiciona os novos VersionIssues
@@ -183,12 +196,19 @@ public class IssueService {
         }
     }
 
+    /**
+     * Converte uma lista de JiraIssueResponseDTO em uma lista de IssueDTO
+     *
+     * @param jiraIssueResponseDTO Resposta da API do Jira
+     * @param sprint                Sprint associada
+     * @return Lista de IssueDTO
+     */
     public List<IssueDTO> getIssueDTO(JiraIssueResponseDTO jiraIssueResponseDTO, Sprint sprint) {
         List<IssueDTO> issueDTOS = new ArrayList<>();
 
         jiraIssueResponseDTO.getIssues().forEach(jiraIssueResponseDTO1 -> {
             IssueDTO issueDTO = new IssueDTO();
-            issueDTO.setId(Long.parseLong(jiraIssueResponseDTO1.getId()));
+            issueDTO.setId(Long.parseLong(jiraIssueResponseDTO1.getId())); // Converte o ID recebido do Jira (String) para Long (ID do banco de dados)
             issueDTO.setKey(jiraIssueResponseDTO1.getKey());
             issueDTO.setStatus(jiraIssueResponseDTO1.getFields().getStatus().getName());
             issueDTO.setAssignee(nonNull(jiraIssueResponseDTO1.getFields().getAssignee()) && nonNull(jiraIssueResponseDTO1.getFields().getAssignee().getEmailAddress()) ? jiraIssueResponseDTO1.getFields().getAssignee().getEmailAddress() : "UNASSIGNED");
@@ -207,7 +227,7 @@ public class IssueService {
             issueDTO.setCreated(nonNull(jiraIssueResponseDTO1.getFields().getCreated()) ? LocalDateTime.parse(jiraIssueResponseDTO1.getFields().getCreated(), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")) : null);
             issueDTO.setFlagged(jiraIssueResponseDTO1.getFields().isFlagged());
 
-            issueDTO.setWorklog(nonNull(jiraIssueResponseDTO1.getFields().getWorklog()) ? worklogService.toDTO(jiraIssueResponseDTO1.getFields().getWorklog()) : null);
+            issueDTO.setWorklog(nonNull(jiraIssueResponseDTO1.getFields().getWorklog()) ? worklogService.toDTO(jiraIssueResponseDTO1.getFields().getWorklog()) : null); // Converte o worklog recebido do Jira e seus WorklogEntries para um WorklogDTO
 
             if (nonNull(jiraIssueResponseDTO1.getFields().getParent())) {
                 // Cria um IssueDTO para o parent
@@ -228,9 +248,13 @@ public class IssueService {
 
             if (nonNull(jiraIssueResponseDTO1.getFields().getFixVersions())) {
                 List<VersionDTO> versionDTOS = new ArrayList<>();
+
+                // Converte as versões do Jira para VersionDTO
                 jiraIssueResponseDTO1.getFields().getFixVersions().forEach(version -> {
+                    // Para cada versão encontrada, busca no banco de dados e converte para VersionDTO
                     versionDTOS.add(versionService.toDTO(versionService.findById(Long.parseLong(version.getId()))));
                 });
+                // Define as versões no issueDTO
                 issueDTO.setVersion(versionDTOS);
             }
 
@@ -240,26 +264,13 @@ public class IssueService {
         return issueDTOS;
     }
 
-    public Issue findIssueById(Long id) {
-        return issueRepository.findById(id).orElse(null);
-    }
-
-    public Issue getIssueByParent(JiraIssueResponseDTO.Parent parent) {
-        return Issue.builder()
-                .id(Long.parseLong(parent.getId()))
-                .key(parent.getKey())
-                .issueType(parent.getFields().getIssuetype().getName())
-                .priority(parent.getFields().getPriority().getName())
-                .summary(parent.getFields().getSummary())
-                .status(parent.getFields().getStatus().getName()).build();
-    }
-
-    public IssueDTO toDto(Issue issue) {
-        IssueDTO issueDTO = new IssueDTO();
-        BeanUtils.copyProperties(issue, issueDTO);
-        return issueDTO;
-    }
-
+    /**
+     * Converte um IssueDTO para um Issue
+     *
+     * @param issueDTO      IssueDTO a ser convertido
+     * @param processedIds  IDs de Issues já processadas
+     * @return Issue convertido
+     */
     public Issue toDomain(IssueDTO issueDTO, Set<Long> processedIds) {
         Issue issue = new Issue();
         BeanUtils.copyProperties(issueDTO, issue);

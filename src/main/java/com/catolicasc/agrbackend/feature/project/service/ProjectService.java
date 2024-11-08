@@ -15,6 +15,11 @@ public class ProjectService {
         this.projectRepository = projectRepository;
     }
 
+    /**
+     * Busca todos os projetos cadastrados no banco de dados
+     *
+     * @return Lista de projetos
+     */
     public List<Project> findAll() {
         return projectRepository.findAll();
     }

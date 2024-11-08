@@ -35,27 +35,41 @@ public class SprintService {
         this.jiraAPI = jiraAPI;
     }
 
+    /**
+     * Busca um sprint no banco de dados
+     *
+     * @param id Identificador do sprint
+     * @return Sprint
+     */
     public Sprint findById(Long id) {
         return sprintRepository.findById(id).orElse(null);
     }
 
+    /**
+     * Busca todos os sprints cadastrados no banco de dados
+     *
+     * @return Lista de sprints
+     */
     public List<Sprint> findAll() {
         return sprintRepository.findAll();
     }
 
-    public Sprint toDomain(JiraIssueResponseDTO.Sprint sprint) {
-        Sprint sprintDomain = new Sprint();
-        sprintDomain.setId(Long.parseLong(sprint.getId()));
-        sprintDomain.setName(sprint.getName());
-        return sprintDomain;
-    }
-
+    /**
+     * Converte um SprintDTO para um Sprint
+     * @param sprintDTO Objeto retornado pela API do Jira
+     * @return Sprint convertido
+     */
     public Sprint toDomain(SprintDTO sprintDTO) {
         Sprint sprint = new Sprint();
         BeanUtils.copyProperties(sprintDTO, sprint);
         return sprint;
     }
 
+    /**
+     * Converte um SprintResponse para um SprintDTO
+     * @param sprint Objeto retornado pela API do Jira
+     * @return SprintDTO convertido
+     */
     public SprintDTO toDto(JiraSprintResponseDTO.SprintResponse sprint) {
         SprintDTO sprintDTO = new SprintDTO();
         BeanUtils.copyProperties(sprint, sprintDTO);
@@ -70,64 +84,28 @@ public class SprintService {
         return sprintDTO;
     }
 
+    /**
+     * Converte um Sprint para um SprintDTO
+     * @param sprint Objeto retornado pela API do Jira
+     * @return SprintDTO convertido
+     */
     public SprintDTO toDto(Sprint sprint) {
         SprintDTO sprintDTO = new SprintDTO();
         BeanUtils.copyProperties(sprint, sprintDTO);
         return sprintDTO;
     }
 
-    public CompletableFuture<List<SprintDTO>> syncSprintsByBoardAsync(String boardId) {
-        return CompletableFuture.supplyAsync(() -> {
-            List<SprintDTO> sprintDTOS = new ArrayList<>();
-            Long startAt = 0L;
-            boolean hasMoreSprints;
-
-            do {
-                // Busca de forma síncrona a resposta da API do Jira
-                JiraSprintResponseDTO jiraSprintResponseDTO = jiraAPI.listSprintsByBoard(boardId, startAt).getBody();
-                assert jiraSprintResponseDTO != null;
-
-                if (!jiraSprintResponseDTO.getValues().isEmpty()) {
-                    List<JiraSprintResponseDTO.SprintResponse> sprintResponses = jiraSprintResponseDTO.getValues();
-
-                    List<CompletableFuture<Void>> futures = new ArrayList<>();
-
-                    for (JiraSprintResponseDTO.SprintResponse sprintResponse : sprintResponses) {
-                        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                            SprintDTO sprintDTO = toDto(sprintResponse);
-
-                            Sprint sprint = sprintRepository.findById(Long.parseLong(sprintResponse.getId())).orElse(null);
-
-                            if (nonNull(sprint)) {
-                                updateSprintIfChanged(sprint, sprintDTO);
-                            } else {
-                                sprint = toDomain(sprintDTO);
-                            }
-
-                            sprintRepository.save(sprint);  // Salva no banco de forma assíncrona
-                            sprintDTOS.add(sprintDTO);      // Adiciona ao retorno
-                        });
-                        futures.add(future);
-                    }
-
-                    // Espera que todas as operações assíncronas terminem antes de continuar
-                    CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-                }
-
-                hasMoreSprints = !jiraSprintResponseDTO.isLast();
-                startAt++;
-
-            } while (hasMoreSprints);
-
-            return sprintDTOS;
-        });
-    }
-
-    public List<SprintDTO> syncSprintsByBoard(String boardId) {
-        List<SprintDTO> sprintDTOS = new ArrayList<>();
+    /**
+     * Sincroniza os sprints de um board com o Jira
+     *
+     * @param boardId Identificador do board
+     * @return Lista de sprints sincronizados
+     */
+    public void syncSprintsByBoard(String boardId) {
         Long startAt = 0L;
         boolean hasMoreSprints;
 
+        // Loop utilizado por conta da paginação do endpoint do Jira
         do {
             JiraSprintResponseDTO jiraSprintResponseDTO = jiraAPI.listSprintsByBoard(boardId, startAt).getBody();
             assert jiraSprintResponseDTO != null;
@@ -146,21 +124,23 @@ public class SprintService {
                         sprint = toDomain(sprintDTO);
                     }
 
-                    sprintRepository.save(sprint);  // Salva imediatamente no banco
-                    sprintDTOS.add(sprintDTO);      // Adiciona ao retorno
+                    sprintRepository.save(sprint);     // Adiciona ao retorno
                 }
             }
 
+            // Verifica se há mais sprints para buscar
             hasMoreSprints = !jiraSprintResponseDTO.isLast();
+            // Atualiza o contador de sprints para a próxima requisição estar na próxima página
             startAt++;
 
-        } while (hasMoreSprints);
-
-        return sprintDTOS;
+        } while (hasMoreSprints); // Enquanto houver mais sprints para buscar
     }
 
-
-
+    /**
+     * Atualiza as propriedades do sprint se houver alterações
+     * @param sprint Sprint a ser atualizado
+     * @param sprintDTO Sprint com os novos valores
+     */
     private void updateSprintIfChanged(Sprint sprint, SprintDTO sprintDTO) {
         updatePropertyIfChanged(sprint::getName, sprint::setName, sprintDTO.getName());
         updatePropertyIfChanged(sprint::getState, sprint::setState, sprintDTO.getState());
@@ -170,12 +150,24 @@ public class SprintService {
         updatePropertyIfChanged(sprint::getGoal, sprint::setGoal, sprintDTO.getGoal());
     }
 
+    /**
+     * Atualiza uma propriedade se o valor for diferente do atual
+     * @param getter Função para obter o valor atual
+     * @param setter Função para atualizar o valor
+     * @param newValue Novo valor
+     * @param <T> Tipo do valor
+     */
     private <T> void updatePropertyIfChanged(Supplier<T> getter, Consumer<T> setter, T newValue) {
         if (nonNull(newValue) && !Objects.equals(getter.get(), newValue)) {
             setter.accept(newValue);
         }
     }
 
+    /**
+     * Busca um sprint no banco de dados, caso não exista, cria um novo
+     * @param sprintId Identificador da sprint
+     * @return
+     */
     public SprintDTO getSprintDTO(Long sprintId) {
         return toDto(findById(sprintId));
     }

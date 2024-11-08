@@ -21,4 +21,5 @@ public class Component {
 
     @Column(name = "name")
     private String name;
+    
 }

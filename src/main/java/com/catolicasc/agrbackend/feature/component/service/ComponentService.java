@@ -16,10 +16,11 @@ public class ComponentService {
         this.componentRepository = componentRepository;
     }
 
-    public Component findById(Long id) {
-        return componentRepository.findById(id).orElse(null);
-    }
-
+    /**
+     * Converte um ComponentDTO para um Component
+     * @param component Objeto retornado pela API do Jira
+     * @return ComponentDTO convertido
+     */
     public ComponentDTO toDto(JiraIssueResponseDTO.Component component) {
         ComponentDTO componentDTO = new ComponentDTO();
         componentDTO.setId(Long.parseLong(component.getId()));
@@ -27,26 +28,11 @@ public class ComponentService {
         return componentDTO;
     }
 
-
-    public Component toDomain(JiraIssueResponseDTO.Component component) {
-        Component existingComponent = findById(Long.parseLong(component.getId()));
-        if (existingComponent != null) {
-            return existingComponent;
-        }
-
-        Component componentDomain = new Component();
-        componentDomain.setId(Long.parseLong(component.getId()));
-        componentDomain.setName(component.getName());
-        return componentDomain;
-    }
-
-    public Component toDomain(ComponentDTO componentDTO) {
-        Component component = new Component();
-        component.setId(componentDTO.getId());
-        component.setName(componentDTO.getName());
-        return component;
-    }
-
+    /**
+     * Busca um componente no banco de dados, caso não exista, cria um novo
+     * @param componentDTO
+     * @return
+     */
     @Transactional
     public Component findOrCreateComponent(ComponentDTO componentDTO) {
         Long componentId = componentDTO.getId();
