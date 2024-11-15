@@ -16,6 +16,17 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 
 @Configuration
 public class FeignPredictionConfiguration {
+
+    /**
+     * Configura o ObjectMapper para deserializar JSON em objetos Java, com suporte a datas do Java 8+ e tolerância a propriedades desconhecidas.
+     * Define um decodificador Feign que usa o ObjectMapper configurado para converter as respostas das APIs em objetos Java.
+     * Isso é útil para garantir que o cliente Feign interprete corretamente os dados recebidos, mesmo em cenários complexos, como respostas que contêm campos inesperados ou formatos de data específicos.
+     */
+
+    /**
+     * Configuração de deserialização de objetos
+     * @return
+     */
     @Bean
     public ObjectMapper objectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -25,6 +36,11 @@ public class FeignPredictionConfiguration {
         return objectMapper;
     }
 
+    /**
+     * Configuração de decodificação de objetos
+     * @param objectMapper
+     * @return
+     */
     @Bean
     public Decoder feignDecoder(ObjectMapper objectMapper) {
         HttpMessageConverter<?> jacksonConverter = new MappingJackson2HttpMessageConverter(objectMapper);

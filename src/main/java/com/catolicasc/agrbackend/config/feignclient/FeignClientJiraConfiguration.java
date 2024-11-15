@@ -26,6 +26,10 @@ public class FeignClientJiraConfiguration {
     @Value("${JIRA_API_SECRET}")
     private String jiraSecret;
 
+    /**
+     * Configuração de interceptador para adicionar o header de autenticação da API do Jira
+     * @return
+     */
     @Bean
     public RequestInterceptor basicAuthRequestInterceptor() {
         return new RequestInterceptor() {
@@ -39,6 +43,16 @@ public class FeignClientJiraConfiguration {
         };
     }
 
+    /**
+     * Configura o ObjectMapper para deserializar JSON em objetos Java, com suporte a datas do Java 8+ e tolerância a propriedades desconhecidas.
+     * Define um decodificador Feign que usa o ObjectMapper configurado para converter as respostas das APIs em objetos Java.
+     * Isso é útil para garantir que o cliente Feign interprete corretamente os dados recebidos, mesmo em cenários complexos, como respostas que contêm campos inesperados ou formatos de data específicos.
+     */
+
+    /**
+     * Configuração de deserialização de objetos
+     * @return
+     */
     @Bean
     public ObjectMapper objectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -48,6 +62,11 @@ public class FeignClientJiraConfiguration {
         return objectMapper;
     }
 
+    /**
+     * Configuração de decodificação de objetos
+     * @param objectMapper
+     * @return
+     */
     @Bean
     public Decoder feignDecoder(ObjectMapper objectMapper) {
         HttpMessageConverter<?> jacksonConverter = new MappingJackson2HttpMessageConverter(objectMapper);
