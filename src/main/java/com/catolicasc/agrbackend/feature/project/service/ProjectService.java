@@ -23,4 +23,14 @@ public class ProjectService {
     public List<Project> findAll() {
         return projectRepository.findAll();
     }
+
+    /**
+     * Busca um projeto no banco de dados
+     *
+     * @param id Identificador do projeto
+     * @return Projeto
+     */
+    public Project findById(Long id) {
+        return projectRepository.findById(id).orElse(null);
+    }
 }

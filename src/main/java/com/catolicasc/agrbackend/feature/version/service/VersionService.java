@@ -31,6 +31,15 @@ public class VersionService {
     }
 
     /**
+     * Busca todas as versões de um projeto
+     * @param projectId Identificador do projeto
+     * @return Lista de versões
+     */
+    public List<VersionDTO> findAllByProjectId(Long projectId) {
+        return versionRepository.findAllByProjectId(projectId).stream().map(this::toDTO).toList();
+    }
+
+    /**
      * Busca um versão no banco de dados
      *
      * @param id Identificador da versão

@@ -55,6 +55,16 @@ public class SprintService {
     }
 
     /**
+     * Busca todos os sprints cadastrados no banco de dados por projeto
+     *
+     * @param projectKey Identificador do projeto
+     * @return Lista de sprints
+     */
+    public List<Sprint> findAllByProjectKey(String projectKey) {
+        return sprintRepository.findAllByNameContainsIgnoreCase(projectKey);
+    }
+
+    /**
      * Converte um SprintDTO para um Sprint
      * @param sprintDTO Objeto retornado pela API do Jira
      * @return Sprint convertido

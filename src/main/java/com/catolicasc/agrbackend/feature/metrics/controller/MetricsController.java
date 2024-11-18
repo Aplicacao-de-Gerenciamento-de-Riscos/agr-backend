@@ -1,8 +1,7 @@
 package com.catolicasc.agrbackend.feature.metrics.controller;
 
-import com.catolicasc.agrbackend.feature.metrics.dto.DelieveryPercentagePerIssueTypeDTO;
-import com.catolicasc.agrbackend.feature.metrics.dto.PredictDelayPerVersionDTO;
-import com.catolicasc.agrbackend.feature.metrics.dto.WorkPlanningVarianceDTO;
+import com.catolicasc.agrbackend.feature.issue.dto.BugIssuesRelationDTO;
+import com.catolicasc.agrbackend.feature.metrics.dto.*;
 import com.catolicasc.agrbackend.feature.metrics.service.MetricsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +23,7 @@ public class MetricsController {
     private MetricsService metricsService;
 
     @GetMapping("/delivery-percentage")
-    public ResponseEntity<List<DelieveryPercentagePerIssueTypeDTO>> getDeliveryPercentagePerIssueType(@RequestParam(name = "versionIds", required = false) List<Long> versionIds, @RequestParam(name = "sprintIds",required = false) List<Long> sprintIds) {
+    public ResponseEntity<List<DelieveryPercentagePerIssueTypeDTO>> getDeliveryPercentagePerIssueType(@RequestParam(name = "versionIds", required = false) List<Long> versionIds, @RequestParam(name = "sprintIds", required = false) List<Long> sprintIds) {
         List<DelieveryPercentagePerIssueTypeDTO> delieveryPercentagePerIssueTypeDTOS = new ArrayList<>();
         if (nonNull(sprintIds) && !sprintIds.isEmpty()) {
             for (Long sprintId : sprintIds) {
@@ -41,7 +40,7 @@ public class MetricsController {
     }
 
     @GetMapping("/work-planning-variance")
-    public ResponseEntity<List<WorkPlanningVarianceDTO>> getWorkPlanningVariance(@RequestParam(name = "versionIds", required = false) List<Long> versionIds, @RequestParam(name = "sprintIds",required = false) List<Long> sprintIds) {
+    public ResponseEntity<List<WorkPlanningVarianceDTO>> getWorkPlanningVariance(@RequestParam(name = "versionIds", required = false) List<Long> versionIds, @RequestParam(name = "sprintIds", required = false) List<Long> sprintIds) {
         List<WorkPlanningVarianceDTO> workPlanningVarianceDTOS = new ArrayList<>();
         if (nonNull(sprintIds) && !sprintIds.isEmpty()) {
             for (Long sprintId : sprintIds) {
@@ -60,5 +59,27 @@ public class MetricsController {
     @GetMapping("/predict-delay")
     public ResponseEntity<List<PredictDelayPerVersionDTO>> predictDelay(@RequestParam(name = "versionIds") List<Long> versionIds) {
         return ResponseEntity.ok(metricsService.getDelayPrediction(versionIds));
+    }
+
+    @GetMapping("/critical-issues-relation")
+    public ResponseEntity<List<CriticalIssueRelationDTO>> getCriticalIssuesRelation(@RequestParam(name = "versionIds", required = false) List<Long> versionIds, @RequestParam(name = "sprintIds", required = false) List<Long> sprintIds) {
+        if (nonNull(sprintIds) && !sprintIds.isEmpty()) {
+            return ResponseEntity.ok(metricsService.getCriticalIssuesRelation(null, sprintIds));
+        } else if (nonNull(versionIds) && !versionIds.isEmpty()) {
+            return ResponseEntity.ok(metricsService.getCriticalIssuesRelation(versionIds, null));
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/bug-issues-relation")
+    public ResponseEntity<List<BugIssueRelationDTO>> getBugIssuesRelation(@RequestParam(name = "versionIds", required = false) List<Long> versionIds, @RequestParam(name = "sprintIds", required = false) List<Long> sprintIds) {
+        if (nonNull(sprintIds) && !sprintIds.isEmpty()) {
+            return ResponseEntity.ok(metricsService.getBugIssuesRelation(null, sprintIds));
+        } else if (nonNull(versionIds) && !versionIds.isEmpty()) {
+            return ResponseEntity.ok(metricsService.getBugIssuesRelation(versionIds, null));
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }
