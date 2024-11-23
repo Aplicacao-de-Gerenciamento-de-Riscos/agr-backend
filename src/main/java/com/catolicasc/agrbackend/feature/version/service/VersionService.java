@@ -11,6 +11,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -35,8 +36,13 @@ public class VersionService {
      * @param projectId Identificador do projeto
      * @return Lista de versões
      */
-    public List<VersionDTO> findAllByProjectId(Long projectId) {
-        return versionRepository.findAllByProjectId(projectId).stream().map(this::toDTO).toList();
+    public List<VersionDTO> findAllByProjectId(List<Long> projectId) {
+        List<VersionDTO> versionDTOS = new ArrayList<>();
+        projectId.forEach(id -> {
+            List<Version> versions = versionRepository.findAllByProjectId(id);
+            versionDTOS.addAll(versions.stream().map(this::toDTO).toList());
+        });
+        return versionDTOS;
     }
 
     /**

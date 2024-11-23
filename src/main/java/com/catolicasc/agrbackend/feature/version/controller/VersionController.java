@@ -19,7 +19,7 @@ public class VersionController {
     private VersionService versionService;
 
     @GetMapping("/all")
-    public ResponseEntity<List<VersionDTO>> getAllVersions(@RequestParam(name = "projectId") Long projectId) {
+    public ResponseEntity<List<VersionDTO>> getAllVersions(@RequestParam(name = "projectId") List<Long> projectId) {
         return ResponseEntity.ok(versionService.findAllByProjectId(projectId));
     }
 }

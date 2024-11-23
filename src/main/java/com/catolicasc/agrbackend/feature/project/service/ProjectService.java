@@ -1,7 +1,10 @@
 package com.catolicasc.agrbackend.feature.project.service;
 
 import com.catolicasc.agrbackend.feature.project.domain.Project;
+import com.catolicasc.agrbackend.feature.project.dto.ProjectDTO;
 import com.catolicasc.agrbackend.feature.project.repository.ProjectRepository;
+import com.fasterxml.jackson.databind.util.BeanUtil;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -33,4 +36,17 @@ public class ProjectService {
     public Project findById(Long id) {
         return projectRepository.findById(id).orElse(null);
     }
+
+    /**
+     * Transforma um domain Project em um DTO Project
+     *
+     * @param project Projeto
+     * @return ProjectDTO
+     */
+    public ProjectDTO toDTO(Project project) {
+        ProjectDTO projectDTO = new ProjectDTO();
+        BeanUtils.copyProperties(project, projectDTO);
+        return projectDTO;
+    }
+
 }
