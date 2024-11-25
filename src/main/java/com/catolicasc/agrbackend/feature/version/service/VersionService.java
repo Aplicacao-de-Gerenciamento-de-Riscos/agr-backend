@@ -3,6 +3,7 @@ package com.catolicasc.agrbackend.feature.version.service;
 import com.catolicasc.agrbackend.clients.jira.dto.JiraVersionResponseDTO;
 import com.catolicasc.agrbackend.clients.jira.service.JiraAPI;
 import com.catolicasc.agrbackend.feature.project.domain.Project;
+import com.catolicasc.agrbackend.feature.project.dto.ProjectDTO;
 import com.catolicasc.agrbackend.feature.project.service.ProjectService;
 import com.catolicasc.agrbackend.feature.version.domain.Version;
 import com.catolicasc.agrbackend.feature.version.dto.VersionDTO;
@@ -25,10 +26,12 @@ public class VersionService {
 
     private final VersionRepository versionRepository;
     private final JiraAPI jiraAPI;
+    private final ProjectService projectService;
 
-    public VersionService(VersionRepository versionRepository, JiraAPI jiraAPI) {
+    public VersionService(VersionRepository versionRepository, JiraAPI jiraAPI, ProjectService projectService) {
         this.versionRepository = versionRepository;
         this.jiraAPI = jiraAPI;
+        this.projectService = projectService;
     }
 
     /**
@@ -99,6 +102,8 @@ public class VersionService {
     public VersionDTO toDTO(Version version) {
         VersionDTO versionDTO = new VersionDTO();
         BeanUtils.copyProperties(version, versionDTO);
+        ProjectDTO projectDTO = projectService.toDTO(version.getProject());
+        versionDTO.setProject(projectDTO);
         return versionDTO;
     }
 

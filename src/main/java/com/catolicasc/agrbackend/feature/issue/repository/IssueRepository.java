@@ -23,7 +23,7 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
      * @return uma lista de IssueTypeDonePercentageDTO contendo o tipo de issue e a porcentagem de issues 'DONE'
      */
     @Query("SELECT new com.catolicasc.agrbackend.feature.issue.dto.IssueTypeDonePercentageDTO(i.issueType, " +
-            "(SUM(CASE WHEN i.status = 'Done' THEN 1 ELSE 0 END) * 100.0 / COUNT(i))) " +
+            "(ROUND((SUM(CASE WHEN i.status = 'Done' THEN 1 ELSE 0 END) * 100.0 / COUNT(i)), 1))) " +
             "FROM Issue i " +
             "LEFT JOIN VersionIssue vi ON i.id = vi.issue.id " +
             "WHERE (:codVersion IS NULL OR vi.version.id = :codVersion) " +
@@ -63,12 +63,12 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
             "SUM(CASE WHEN i.priority = 'Critical' OR i.priority = 'Blocker' THEN 1 ELSE 0 END), " +
             "SUM(CASE WHEN i.priority != 'Critical' AND i.priority != 'Blocker' THEN 1 ELSE 0 END), " +
             "COUNT(DISTINCT i), " +
-            "CAST(SUM(CASE WHEN i.priority = 'Critical' OR i.priority = 'Blocker' THEN 1 ELSE 0 END) * 100.0 / COUNT(DISTINCT i) AS double), " +
-            "CAST(SUM(CASE WHEN i.priority != 'Critical' AND i.priority != 'Blocker' THEN 1 ELSE 0 END) * 100.0 / COUNT(DISTINCT i) AS double)) " +
+            "CAST(ROUND(SUM(CASE WHEN i.priority = 'Critical' OR i.priority = 'Blocker' THEN 1 ELSE 0 END) * 100.0 / COUNT(DISTINCT i), 1) AS double), " +
+            "CAST(ROUND(SUM(CASE WHEN i.priority != 'Critical' AND i.priority != 'Blocker' THEN 1 ELSE 0 END) * 100.0 / COUNT(DISTINCT i), 1) AS double)) " +
             "FROM Issue i " +
             "LEFT JOIN VersionIssue vi ON i.id = vi.issue.id " +
             "WHERE (:codVersions IS NULL OR vi.version.id IN :codVersions) " +
-            "AND vi.version.id IS NOT NULL " + // Garante que apenas registros válidos sejam considerados
+            "AND vi.version.id IS NOT NULL " +
             "GROUP BY vi.version.id")
     List<CriticalIssueRelationDTO> findCriticalIssuesByVersions(@Param("codVersions") List<Long> codVersions);
 
@@ -85,8 +85,8 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
             "SUM(CASE WHEN i.priority = 'Critical' OR i.priority = 'Blocker' THEN 1 ELSE 0 END), " +
             "SUM(CASE WHEN i.priority != 'Critical' AND i.priority != 'Blocker' THEN 1 ELSE 0 END), " +
             "COUNT(DISTINCT i), " +
-            "CAST(SUM(CASE WHEN i.priority = 'Critical' OR i.priority = 'Blocker' THEN 1 ELSE 0 END) * 100.0 / COUNT(DISTINCT i) AS double), " +
-            "CAST(SUM(CASE WHEN i.priority != 'Critical' AND i.priority != 'Blocker' THEN 1 ELSE 0 END) * 100.0 / COUNT(DISTINCT i) AS double)) " +
+            "CAST(ROUND((SUM(CASE WHEN i.priority = 'Critical' OR i.priority = 'Blocker' THEN 1 ELSE 0 END) * 100.0 / COUNT(DISTINCT i)), 1) AS double), " +
+            "CAST(ROUND((SUM(CASE WHEN i.priority != 'Critical' AND i.priority != 'Blocker' THEN 1 ELSE 0 END) * 100.0 / COUNT(DISTINCT i)), 1) AS double)) " +
             "FROM Issue i " +
             "LEFT JOIN VersionIssue vi ON i.id = vi.issue.id " +
             "WHERE (:codSprints IS NULL OR i.sprint.id IN :codSprints) " +
@@ -107,8 +107,8 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
             "SUM(CASE WHEN i.issueType = 'Bug' THEN 1 ELSE 0 END), " +
             "SUM(CASE WHEN i.issueType != 'Bug' THEN 1 ELSE 0 END), " +
             "COUNT(i), " +
-            "CAST((SUM(CASE WHEN i.issueType = 'Bug' THEN 1 ELSE 0 END) * 100.0 / COUNT(i)) AS double), " +
-            "CAST((SUM(CASE WHEN i.issueType != 'Bug' THEN 1 ELSE 0 END) * 100.0 / COUNT(i)) AS double)) " +
+            "CAST(ROUND(((SUM(CASE WHEN i.issueType = 'Bug' THEN 1 ELSE 0 END) * 100.0 / COUNT(i))), 1) AS double), " +
+            "CAST(ROUND(((SUM(CASE WHEN i.issueType != 'Bug' THEN 1 ELSE 0 END) * 100.0 / COUNT(i))), 1) AS double)) " +
             "FROM Issue i " +
             "LEFT JOIN VersionIssue vi ON i.id = vi.issue.id " +
             "WHERE (:codVersions IS NULL OR vi.version.id IN :codVersions) " +
@@ -129,8 +129,8 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
             "SUM(CASE WHEN i.issueType = 'Bug' THEN 1 ELSE 0 END), " +
             "SUM(CASE WHEN i.issueType != 'Bug' THEN 1 ELSE 0 END), " +
             "COUNT(i), " +
-            "CAST((SUM(CASE WHEN i.issueType = 'Bug' THEN 1 ELSE 0 END) * 100.0 / COUNT(i)) AS double), " +
-            "CAST((SUM(CASE WHEN i.issueType != 'Bug' THEN 1 ELSE 0 END) * 100.0 / COUNT(i)) AS double)) " +
+            "CAST(ROUND(((SUM(CASE WHEN i.issueType = 'Bug' THEN 1 ELSE 0 END) * 100.0 / COUNT(i))), 1) AS double), " +
+            "CAST(ROUND(((SUM(CASE WHEN i.issueType != 'Bug' THEN 1 ELSE 0 END) * 100.0 / COUNT(i))), 1) AS double)) " +
             "FROM Issue i " +
             "LEFT JOIN VersionIssue vi ON i.id = vi.issue.id " +
             "WHERE (:codSprints IS NULL OR i.sprint.id IN :codSprints) " +

@@ -15,6 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -129,8 +131,8 @@ public class MetricsService {
             consolidatedResults.forEach((id, consolidatedDTO) -> {
                 long totalIssuesCount = consolidatedDTO.getTotalIssuesCount();
                 if (totalIssuesCount > 0) {
-                    consolidatedDTO.setCriticalIssuesPercentage((consolidatedDTO.getCriticalIssuesCount() * 100.0) / totalIssuesCount);
-                    consolidatedDTO.setNonCriticalIssuesPercentage((consolidatedDTO.getNonCriticalIssuesCount() * 100.0) / totalIssuesCount);
+                    consolidatedDTO.setCriticalIssuesPercentage(round((consolidatedDTO.getCriticalIssuesCount() * 100.0) / totalIssuesCount, 1));
+                    consolidatedDTO.setNonCriticalIssuesPercentage(round((consolidatedDTO.getNonCriticalIssuesCount() * 100.0) / totalIssuesCount, 1));
                 }
                 CriticalIssueRelationDTO criticalIssueRelationDTO = new CriticalIssueRelationDTO();
                 criticalIssueRelationDTO.setVersion(versionService.getVersionDTO(id));
@@ -161,8 +163,8 @@ public class MetricsService {
             consolidatedResults.forEach((id, consolidatedDTO) -> {
                 long totalIssuesCount = consolidatedDTO.getTotalIssuesCount();
                 if (totalIssuesCount > 0) {
-                    consolidatedDTO.setCriticalIssuesPercentage((consolidatedDTO.getCriticalIssuesCount() * 100.0) / totalIssuesCount);
-                    consolidatedDTO.setNonCriticalIssuesPercentage((consolidatedDTO.getNonCriticalIssuesCount() * 100.0) / totalIssuesCount);
+                    consolidatedDTO.setCriticalIssuesPercentage(round((consolidatedDTO.getCriticalIssuesCount() * 100.0) / totalIssuesCount, 1));
+                    consolidatedDTO.setNonCriticalIssuesPercentage(round((consolidatedDTO.getNonCriticalIssuesCount() * 100.0) / totalIssuesCount, 1));
                 }
                 CriticalIssueRelationDTO criticalIssueRelationDTO = new CriticalIssueRelationDTO();
                 criticalIssueRelationDTO.setSprint(sprintService.getSprintDTO(id));
@@ -185,7 +187,7 @@ public class MetricsService {
             versionId.forEach(id -> {
                 BugIssueRelationDTO bugIssueRelationDTO = new BugIssueRelationDTO();
                 bugIssueRelationDTO.setVersion(versionService.getVersionDTO(id));
-                bugIssueRelationDTO.setBugIssuesRelation(bugIssuesRelationDTOPersisted);
+                bugIssueRelationDTO.setBugIssuesRelation(bugIssuesRelationDTOPersisted.stream().filter(bugIssuesRelationDTO -> bugIssuesRelationDTO.getId().equals(id)).toList());
                 bugIssueRelationDTOS.add(bugIssueRelationDTO);
             });
         } else {
@@ -193,11 +195,19 @@ public class MetricsService {
             sprintId.forEach(id -> {
                 BugIssueRelationDTO bugIssueRelationDTO = new BugIssueRelationDTO();
                 bugIssueRelationDTO.setSprint(sprintService.getSprintDTO(id));
-                bugIssueRelationDTO.setBugIssuesRelation(bugIssuesRelationDTOPersisted);
+                bugIssueRelationDTO.setBugIssuesRelation(bugIssuesRelationDTOPersisted.stream().filter(bugIssuesRelationDTO -> bugIssuesRelationDTO.getId().equals(id)).toList());
                 bugIssueRelationDTOS.add(bugIssueRelationDTO);
             });
         }
 
         return bugIssueRelationDTOS;
+    }
+
+    // Método utilitário para arredondamento
+    private double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException("O número de casas decimais deve ser positivo");
+        BigDecimal bd = BigDecimal.valueOf(value);
+        bd = bd.setScale(places, RoundingMode.HALF_UP); // Arredondamento para o mais próximo
+        return bd.doubleValue();
     }
 }
