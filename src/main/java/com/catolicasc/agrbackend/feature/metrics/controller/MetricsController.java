@@ -82,4 +82,13 @@ public class MetricsController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    @GetMapping("/epics-per-version")
+    public ResponseEntity<List<EpicPerVersionDTO>> getEpicsPerVersion(@RequestParam(name = "versionIds", required = false) List<Long> versionIds) {
+        if (nonNull(versionIds) && !versionIds.isEmpty()) {
+            return ResponseEntity.ok(metricsService.getEpicsPerVersion(versionIds));
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 }

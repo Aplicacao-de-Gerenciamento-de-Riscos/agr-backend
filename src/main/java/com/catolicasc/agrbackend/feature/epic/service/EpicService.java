@@ -3,9 +3,12 @@ package com.catolicasc.agrbackend.feature.epic.service;
 import com.catolicasc.agrbackend.clients.jira.dto.JiraIssueResponseDTO;
 import com.catolicasc.agrbackend.feature.epic.domain.Epic;
 import com.catolicasc.agrbackend.feature.epic.dto.EpicDTO;
+import com.catolicasc.agrbackend.feature.epic.dto.EpicUsageDTO;
 import com.catolicasc.agrbackend.feature.epic.repository.EpicRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class EpicService {
@@ -48,6 +51,10 @@ public class EpicService {
             epic = epicRepository.save(epic);
         }
         return epic;
+    }
+
+    public List<EpicUsageDTO> getEpicUsageByVersions(List<Long> versionIds) {
+        return epicRepository.findEpicUsagesByVersions(versionIds);
     }
 
 }

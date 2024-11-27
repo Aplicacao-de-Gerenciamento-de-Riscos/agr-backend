@@ -43,6 +43,9 @@ public class VersionService {
         List<VersionDTO> versionDTOS = new ArrayList<>();
         projectId.forEach(id -> {
             List<Version> versions = versionRepository.findAllByProjectId(id);
+            if (id == 10016) {
+                versions.removeIf(version -> !version.getName().contains("MFM"));
+            }
             versionDTOS.addAll(versions.stream().map(this::toDTO).toList());
         });
         return versionDTOS;
