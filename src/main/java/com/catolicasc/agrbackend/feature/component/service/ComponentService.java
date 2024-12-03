@@ -17,7 +17,7 @@ public class ComponentService {
     }
 
     /**
-     * Converte um ComponentDTO para um Component
+     * Converte um objeto do Jira para um ComponentDTO
      * @param component Objeto retornado pela API do Jira
      * @return ComponentDTO convertido
      */

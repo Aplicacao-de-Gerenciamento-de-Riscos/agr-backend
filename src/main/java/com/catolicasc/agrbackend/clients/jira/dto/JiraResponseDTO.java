@@ -7,6 +7,9 @@ import java.util.List;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
+/**
+ * Todas as respostas do Jira retornam como padrão
+ */
 public class JiraResponseDTO {
     private String expand;
     private int startAt;
