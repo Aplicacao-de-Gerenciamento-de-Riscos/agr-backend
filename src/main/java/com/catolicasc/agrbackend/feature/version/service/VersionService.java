@@ -45,6 +45,10 @@ public class VersionService {
             List<Version> versions = versionRepository.findAllByProjectId(id);
             if (id == 10016) {
                 versions.removeIf(version -> !version.getName().contains("MFM"));
+            } else if (id == 10035) {
+                versions.removeIf(version -> version.getName().contains("BKLG") || version.getName().contains("Old"));
+            } else if (id == 10061) {
+                versions.removeIf(version -> version.getName().contains("Roadmap") || version.getName().contains("Lite") || version.getName().contains("DevOps") || version.getName().contains("RD") || version.getName().contains("Gestão da sprint"));
             }
             versionDTOS.addAll(versions.stream().map(this::toDTO).toList());
         });
