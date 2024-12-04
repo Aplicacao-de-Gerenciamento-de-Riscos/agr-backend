@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,6 +24,8 @@ public class ProjectController {
     @GetMapping(value = "/all")
     public ResponseEntity<List<ProjectDTO>> getAllProjects() {
         List<Project> projects = projectService.findAll();
+        projects.removeIf(project -> project.getId() == 10016);
+        projects.sort(Comparator.comparing(Project::getKey));
         List<ProjectDTO> projectDTOS = projects.stream().map(projectService::toDTO).collect(Collectors.toList());
         return ResponseEntity.ok(projectDTOS);
     }

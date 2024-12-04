@@ -1,6 +1,7 @@
 package com.catolicasc.agrbackend.feature.issue.controller;
 
 import com.catolicasc.agrbackend.feature.issue.service.IssueService;
+import com.catolicasc.agrbackend.feature.jobs.service.JobsService;
 import feign.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +16,12 @@ public class IssueController {
     @Autowired
     private IssueService issueService;
 
+    @Autowired
+    private JobsService jobsService;
+
     @GetMapping("/sync")
     public ResponseEntity<Response> syncIssues() {
-        issueService.syncIssuesBySprints();
+        jobsService.syncIssuesOnStart();
         return ResponseEntity.ok().build();
     }
 

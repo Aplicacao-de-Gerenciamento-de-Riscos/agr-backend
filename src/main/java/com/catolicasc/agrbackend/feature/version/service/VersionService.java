@@ -1,5 +1,6 @@
 package com.catolicasc.agrbackend.feature.version.service;
 
+import com.catolicasc.agrbackend.clients.jira.dto.JiraIssueResponseDTO;
 import com.catolicasc.agrbackend.clients.jira.dto.JiraVersionResponseDTO;
 import com.catolicasc.agrbackend.clients.jira.service.JiraAPI;
 import com.catolicasc.agrbackend.feature.project.domain.Project;
@@ -66,6 +67,25 @@ public class VersionService {
     }
 
     /**
+     * Busca uma versão no banco de dados, caso não exista, cria uma nova
+     *
+     * @param version Objeto retornado pela API do Jira
+     * @Return Versão
+     */
+    public Version findByIdOrCreate(JiraIssueResponseDTO.FixVersion version) {
+        return versionRepository.findById(Long.parseLong(version.getId())).orElseGet(() -> {
+            Version newVersion = new Version();
+            newVersion.setId(Long.parseLong(version.getId()));
+            newVersion.setName(version.getName());
+            newVersion.setDescription(version.getDescription());
+            newVersion.setArchived(version.isArchived());
+            newVersion.setReleased(version.isReleased());
+            newVersion.setReleaseDate(nonNull(version.getReleaseDate()) ? LocalDate.parse(version.getReleaseDate()) : null);
+            return versionRepository.save(newVersion);
+        });
+    }
+
+    /**
      * Sincroniza as versões de um projeto com o Jira
      *
      * @param projects Lista de projetos
@@ -109,8 +129,10 @@ public class VersionService {
     public VersionDTO toDTO(Version version) {
         VersionDTO versionDTO = new VersionDTO();
         BeanUtils.copyProperties(version, versionDTO);
-        ProjectDTO projectDTO = projectService.toDTO(version.getProject());
-        versionDTO.setProject(projectDTO);
+        if (nonNull(version.getProject())) {
+            ProjectDTO projectDTO = projectService.toDTO(version.getProject());
+            versionDTO.setProject(projectDTO);
+        }
         return versionDTO;
     }
 

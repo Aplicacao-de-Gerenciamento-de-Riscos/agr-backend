@@ -29,6 +29,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 @Transactional
@@ -65,7 +66,12 @@ public class IssueService {
     }
 
     public JiraIssueResponseDTO listIssuesBySprint(String sprintId) {
-        return jiraAPI.listIssuesBySprint(sprintId, 1000L).getBody();
+        try {
+            return jiraAPI.listIssuesBySprint(sprintId, 1000L).getBody();
+        } catch (Exception e) {
+            log.error("Erro ao buscar issues do sprint {}", sprintId, e);
+            return new JiraIssueResponseDTO();
+        }
     }
 
     /**
@@ -83,6 +89,10 @@ public class IssueService {
      */
     public void syncIssuesBySprint(Sprint sprint) {
         JiraIssueResponseDTO jiraIssueResponseDTO = listIssuesBySprint(sprint.getId().toString());
+        if (isNull(jiraIssueResponseDTO.getIssues())) {
+            log.error("Erro ao buscar issues do sprint {}", sprint.getId());
+            return;
+        }
         List<IssueDTO> issueDTOS = getIssueDTO(jiraIssueResponseDTO, sprint); // Converte a resposta da API do Jira em uma lista de IssueDTO
 
         // Processamento sequencial das IssueDTOs
@@ -252,7 +262,7 @@ public class IssueService {
                 // Converte as versões do Jira para VersionDTO
                 jiraIssueResponseDTO1.getFields().getFixVersions().forEach(version -> {
                     // Para cada versão encontrada, busca no banco de dados e converte para VersionDTO
-                    versionDTOS.add(versionService.toDTO(versionService.findById(Long.parseLong(version.getId()))));
+                    versionDTOS.add(versionService.toDTO(versionService.findByIdOrCreate(version)));
                 });
                 // Define as versões no issueDTO
                 issueDTO.setVersion(versionDTOS);
