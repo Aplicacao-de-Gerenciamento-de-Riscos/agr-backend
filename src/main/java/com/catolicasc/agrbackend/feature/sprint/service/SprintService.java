@@ -28,6 +28,7 @@ public class SprintService {
     private final SprintRepository sprintRepository;
     private final JiraAPI jiraAPI;
 
+    /** Construtor da classe*/
     public SprintService(
         SprintRepository sprintRepository,
         JiraAPI jiraAPI) {
