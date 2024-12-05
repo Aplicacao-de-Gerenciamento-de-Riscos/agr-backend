@@ -28,6 +28,9 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Build with Maven
+      env: 
+        JIRA_API_SECRET: ${{ secrets.JIRA_API_SECRET }}
+        JIRA_API_USER: ${{ secrets.JIRA_API_USER }}
       run: mvn -B package --file pom.xml
 
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
