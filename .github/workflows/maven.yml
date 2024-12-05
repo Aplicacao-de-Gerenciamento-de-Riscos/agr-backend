@@ -37,9 +37,6 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: agrbackend-dev3
         options: >-
-          # Opções para verificação de saúde do container do PostgreSQL:
-          # - health-cmd: Verifica se o banco está pronto.
-          # - health-interval, health-timeout, health-retries: Ajustam intervalos e tempo de checagem.
           --health-cmd="pg_isready -U postgres" 
           --health-interval=10s 
           --health-timeout=5s 
