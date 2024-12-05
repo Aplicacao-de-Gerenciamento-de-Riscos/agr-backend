@@ -152,7 +152,7 @@ public class SprintService {
      * @param sprint Sprint a ser atualizado
      * @param sprintDTO Sprint com os novos valores
      */
-    private void updateSprintIfChanged(Sprint sprint, SprintDTO sprintDTO) {
+    void updateSprintIfChanged(Sprint sprint, SprintDTO sprintDTO) {
         updatePropertyIfChanged(sprint::getName, sprint::setName, sprintDTO.getName());
         updatePropertyIfChanged(sprint::getState, sprint::setState, sprintDTO.getState());
         updatePropertyIfChanged(sprint::getStartDate, sprint::setStartDate, sprintDTO.getStartDate());

@@ -23,7 +23,9 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
      * @return uma lista de IssueTypeDonePercentageDTO contendo o tipo de issue e a porcentagem de issues 'DONE'
      */
     @Query("SELECT new com.catolicasc.agrbackend.feature.issue.dto.IssueTypeDonePercentageDTO(i.issueType, " +
-            "(ROUND((SUM(CASE WHEN i.status = 'Done' THEN 1 ELSE 0 END) * 100.0 / COUNT(i)), 1))) " +
+            "(ROUND((SUM(CASE WHEN i.status = 'Done' THEN 1 ELSE 0 END) * 100.0 / COUNT(i)), 1)), " +
+            "CAST((SUM(i.timeOriginalEstimate) / 3600) as Long), " +
+            "CAST((SUM(i.timespent) / 3600) as Long)) " +
             "FROM Issue i " +
             "LEFT JOIN VersionIssue vi ON i.id = vi.issue.id " +
             "WHERE (:codVersion IS NULL OR vi.version.id = :codVersion) " +
@@ -42,7 +44,11 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
     @Query("SELECT new com.catolicasc.agrbackend.feature.issue.dto.IssuePlanningDTO(" +
             "SUM(CASE WHEN i.status = 'Done' THEN 1 ELSE 0 END), " +
             "SUM(CASE WHEN i.status != 'Done' THEN 1 ELSE 0 END), " +
-            "COUNT(i)) " +
+            "COUNT(i), " +
+            "CAST(SUM(CASE WHEN i.status = 'Done' THEN i.timeOriginalEstimate ELSE 0 END) / 3600 as Long), " +
+            "CAST(SUM(CASE WHEN i.status = 'Done' THEN i.timespent ELSE 0 END) / 3600 as Long), " +
+            "CAST(SUM(CASE WHEN i.status != 'Done' THEN i.timeOriginalEstimate ELSE 0 END) / 3600 as Long), " +
+            "CAST(SUM(CASE WHEN i.status != 'Done' THEN i.timespent ELSE 0 END) / 3600 as Long)) " +
             "FROM Issue i " +
             "LEFT JOIN VersionIssue vi ON i.id = vi.issue.id " +
             "WHERE (:codVersion IS NULL OR vi.version.id = :codVersion) " +

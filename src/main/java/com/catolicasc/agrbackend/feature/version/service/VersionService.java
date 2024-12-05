@@ -157,7 +157,7 @@ public class VersionService {
      * @param version    Versão a ser atualizada
      * @param versionDTO Versão com os novos valores
      */
-    private void updateVersionIfChanged(Version version, VersionDTO versionDTO) {
+    void updateVersionIfChanged(Version version, VersionDTO versionDTO) {
         updatePropertyIfChanged(version::getDescription, version::setDescription, versionDTO.getDescription());
         updatePropertyIfChanged(version::getName, version::setName, versionDTO.getName());
         updatePropertyIfChanged(version::getArchived, version::setArchived, versionDTO.getArchived());

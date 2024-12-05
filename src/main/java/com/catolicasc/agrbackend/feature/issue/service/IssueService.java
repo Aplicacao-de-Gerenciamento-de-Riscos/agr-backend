@@ -99,7 +99,7 @@ public class IssueService {
         issueDTOS.forEach(this::processIssueDTO);
     }
 
-    private void processIssueDTO(IssueDTO issueDTO) {
+    void processIssueDTO(IssueDTO issueDTO) {
         // Evita processar a mesma Issue mais de uma vez
         // Cria uma lista de IDs processados
         Set<Long> processedIds = new HashSet<>();
@@ -183,7 +183,7 @@ public class IssueService {
         }
     }
 
-    private void updateIssueIfChanged(Issue existingIssue, IssueDTO newIssueDTO) {
+    void updateIssueIfChanged(Issue existingIssue, IssueDTO newIssueDTO) {
         updatePropertyIfChanged(existingIssue::getKey, existingIssue::setKey, newIssueDTO.getKey());
         updatePropertyIfChanged(existingIssue::getStatus, existingIssue::setStatus, newIssueDTO.getStatus());
         updatePropertyIfChanged(existingIssue::getAssignee, existingIssue::setAssignee, newIssueDTO.getAssignee());
@@ -216,60 +216,111 @@ public class IssueService {
     public List<IssueDTO> getIssueDTO(JiraIssueResponseDTO jiraIssueResponseDTO, Sprint sprint) {
         List<IssueDTO> issueDTOS = new ArrayList<>();
 
-        jiraIssueResponseDTO.getIssues().forEach(jiraIssueResponseDTO1 -> {
-            IssueDTO issueDTO = new IssueDTO();
-            issueDTO.setId(Long.parseLong(jiraIssueResponseDTO1.getId())); // Converte o ID recebido do Jira (String) para Long (ID do banco de dados)
-            issueDTO.setKey(jiraIssueResponseDTO1.getKey());
-            issueDTO.setStatus(jiraIssueResponseDTO1.getFields().getStatus().getName());
-            issueDTO.setAssignee(nonNull(jiraIssueResponseDTO1.getFields().getAssignee()) && nonNull(jiraIssueResponseDTO1.getFields().getAssignee().getEmailAddress()) ? jiraIssueResponseDTO1.getFields().getAssignee().getEmailAddress() : "UNASSIGNED");
-            issueDTO.setPriority(jiraIssueResponseDTO1.getFields().getPriority().getName());
-            issueDTO.setIssueType(jiraIssueResponseDTO1.getFields().getIssuetype().getName());
-            issueDTO.setSummary(jiraIssueResponseDTO1.getFields().getSummary());
-            issueDTO.setTimespent(jiraIssueResponseDTO1.getFields().getTimespent());
-            issueDTO.setTimeEstimate(jiraIssueResponseDTO1.getFields().getTimeestimate());
-            issueDTO.setTimeOriginalEstimate(jiraIssueResponseDTO1.getFields().getTimeoriginalestimate());
-            issueDTO.setWorkRatio(jiraIssueResponseDTO1.getFields().getWorkratio());
-            issueDTO.setComponents(jiraIssueResponseDTO1.getFields().getComponents().stream().map(componentService::toDto).toList());
-            issueDTO.setSprint(sprintService.toDto(sprint));
-            issueDTO.setEpic(nonNull(jiraIssueResponseDTO1.getFields().getEpic()) ? epicService.toDto(jiraIssueResponseDTO1.getFields().getEpic()) : null);
-            issueDTO.setResolutionDate(nonNull(jiraIssueResponseDTO1.getFields().getResolutiondate()) ? LocalDateTime.parse(jiraIssueResponseDTO1.getFields().getResolutiondate(), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")) : null);
-            issueDTO.setUpdated(nonNull(jiraIssueResponseDTO1.getFields().getUpdated()) ? LocalDateTime.parse(jiraIssueResponseDTO1.getFields().getUpdated(), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")) : null);
-            issueDTO.setCreated(nonNull(jiraIssueResponseDTO1.getFields().getCreated()) ? LocalDateTime.parse(jiraIssueResponseDTO1.getFields().getCreated(), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")) : null);
-            issueDTO.setFlagged(jiraIssueResponseDTO1.getFields().isFlagged());
+        // Verifica se a lista de issues não é nula antes de processar
+        if (nonNull(jiraIssueResponseDTO) && nonNull(jiraIssueResponseDTO.getIssues())) {
+            jiraIssueResponseDTO.getIssues().forEach(jiraIssueResponseDTO1 -> {
+                IssueDTO issueDTO = new IssueDTO();
 
-            issueDTO.setWorklog(nonNull(jiraIssueResponseDTO1.getFields().getWorklog()) ? worklogService.toDTO(jiraIssueResponseDTO1.getFields().getWorklog()) : null); // Converte o worklog recebido do Jira e seus WorklogEntries para um WorklogDTO
+                // Verificações de nulidade para cada campo
+                if (nonNull(jiraIssueResponseDTO1.getId())) {
+                    issueDTO.setId(Long.parseLong(jiraIssueResponseDTO1.getId())); // Converte o ID recebido do Jira (String) para Long (ID do banco de dados)
+                }
+                if (nonNull(jiraIssueResponseDTO1.getKey())) {
+                    issueDTO.setKey(jiraIssueResponseDTO1.getKey());
+                }
+                if (nonNull(jiraIssueResponseDTO1.getFields()) && nonNull(jiraIssueResponseDTO1.getFields().getStatus())) {
+                    issueDTO.setStatus(jiraIssueResponseDTO1.getFields().getStatus().getName());
+                }
+                if (nonNull(jiraIssueResponseDTO1.getFields()) && nonNull(jiraIssueResponseDTO1.getFields().getAssignee()) && nonNull(jiraIssueResponseDTO1.getFields().getAssignee().getEmailAddress())) {
+                    issueDTO.setAssignee(jiraIssueResponseDTO1.getFields().getAssignee().getEmailAddress());
+                } else {
+                    issueDTO.setAssignee("UNASSIGNED");
+                }
+                if (nonNull(jiraIssueResponseDTO1.getFields()) && nonNull(jiraIssueResponseDTO1.getFields().getPriority())) {
+                    issueDTO.setPriority(jiraIssueResponseDTO1.getFields().getPriority().getName());
+                }
+                if (nonNull(jiraIssueResponseDTO1.getFields()) && nonNull(jiraIssueResponseDTO1.getFields().getIssuetype())) {
+                    issueDTO.setIssueType(jiraIssueResponseDTO1.getFields().getIssuetype().getName());
+                }
+                if (nonNull(jiraIssueResponseDTO1.getFields()) && nonNull(jiraIssueResponseDTO1.getFields().getSummary())) {
+                    issueDTO.setSummary(jiraIssueResponseDTO1.getFields().getSummary());
+                }
+                if (nonNull(jiraIssueResponseDTO1.getFields()) && nonNull(jiraIssueResponseDTO1.getFields().getTimespent())) {
+                    issueDTO.setTimespent(jiraIssueResponseDTO1.getFields().getTimespent());
+                }
+                if (nonNull(jiraIssueResponseDTO1.getFields()) && nonNull(jiraIssueResponseDTO1.getFields().getTimeestimate())) {
+                    issueDTO.setTimeEstimate(jiraIssueResponseDTO1.getFields().getTimeestimate());
+                }
+                if (nonNull(jiraIssueResponseDTO1.getFields()) && nonNull(jiraIssueResponseDTO1.getFields().getTimeoriginalestimate())) {
+                    issueDTO.setTimeOriginalEstimate(jiraIssueResponseDTO1.getFields().getTimeoriginalestimate());
+                }
+                if (nonNull(jiraIssueResponseDTO1.getFields()) && nonNull(jiraIssueResponseDTO1.getFields().getWorkratio())) {
+                    issueDTO.setWorkRatio(jiraIssueResponseDTO1.getFields().getWorkratio());
+                }
+                if (nonNull(jiraIssueResponseDTO1.getFields()) && nonNull(jiraIssueResponseDTO1.getFields().getComponents())) {
+                    issueDTO.setComponents(jiraIssueResponseDTO1.getFields().getComponents().stream().map(componentService::toDto).toList());
+                }
+                if (nonNull(sprint)) {
+                    issueDTO.setSprint(sprintService.toDto(sprint));
+                }
+                if (nonNull(jiraIssueResponseDTO1.getFields()) && nonNull(jiraIssueResponseDTO1.getFields().getEpic())) {
+                    issueDTO.setEpic(epicService.toDto(jiraIssueResponseDTO1.getFields().getEpic()));
+                }
+                if (nonNull(jiraIssueResponseDTO1.getFields()) && nonNull(jiraIssueResponseDTO1.getFields().getResolutiondate())) {
+                    issueDTO.setResolutionDate(LocalDateTime.parse(jiraIssueResponseDTO1.getFields().getResolutiondate(), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")));
+                }
+                if (nonNull(jiraIssueResponseDTO1.getFields()) && nonNull(jiraIssueResponseDTO1.getFields().getUpdated())) {
+                    issueDTO.setUpdated(LocalDateTime.parse(jiraIssueResponseDTO1.getFields().getUpdated(), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")));
+                }
+                if (nonNull(jiraIssueResponseDTO1.getFields()) && nonNull(jiraIssueResponseDTO1.getFields().getCreated())) {
+                    issueDTO.setCreated(LocalDateTime.parse(jiraIssueResponseDTO1.getFields().getCreated(), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")));
+                }
+                if (nonNull(jiraIssueResponseDTO1.getFields()) && jiraIssueResponseDTO1.getFields().isFlagged()) {
+                    issueDTO.setFlagged(jiraIssueResponseDTO1.getFields().isFlagged());
+                }
 
-            if (nonNull(jiraIssueResponseDTO1.getFields().getParent())) {
-                // Cria um IssueDTO para o parent
-                IssueDTO parentIssueDTO = new IssueDTO();
-                JiraIssueResponseDTO.Parent parentResponse = jiraIssueResponseDTO1.getFields().getParent();
+                if (nonNull(jiraIssueResponseDTO1.getFields()) && nonNull(jiraIssueResponseDTO1.getFields().getWorklog())) {
+                    issueDTO.setWorklog(worklogService.toDTO(jiraIssueResponseDTO1.getFields().getWorklog())); // Converte o worklog
+                }
 
-                // Preenche o parentIssueDTO com os dados disponíveis
-                parentIssueDTO.setId(Long.parseLong(parentResponse.getId()));
-                parentIssueDTO.setKey(parentResponse.getKey());
-                parentIssueDTO.setSummary(nonNull(parentResponse.getFields().getSummary()) ? parentResponse.getFields().getSummary() : null);
-                parentIssueDTO.setIssueType(nonNull(parentResponse.getFields().getIssuetype().getName()) ? parentResponse.getFields().getIssuetype().getName() : null);
-                parentIssueDTO.setPriority(nonNull(parentResponse.getFields().getPriority().getName()) ? parentResponse.getFields().getPriority().getName() : null);
-                parentIssueDTO.setStatus(nonNull(parentResponse.getFields().getStatus().getName()) ? parentResponse.getFields().getStatus().getName() : null);
+                if (nonNull(jiraIssueResponseDTO1.getFields()) && nonNull(jiraIssueResponseDTO1.getFields().getParent())) {
+                    JiraIssueResponseDTO.Parent parentResponse = jiraIssueResponseDTO1.getFields().getParent();
+                    IssueDTO parentIssueDTO = new IssueDTO();
 
-                // Define o parent no issueDTO atual
-                issueDTO.setParent(parentIssueDTO);
-            }
+                    if (nonNull(parentResponse.getId())) {
+                        parentIssueDTO.setId(Long.parseLong(parentResponse.getId()));
+                    }
+                    if (nonNull(parentResponse.getKey())) {
+                        parentIssueDTO.setKey(parentResponse.getKey());
+                    }
+                    if (nonNull(parentResponse.getFields()) && nonNull(parentResponse.getFields().getSummary())) {
+                        parentIssueDTO.setSummary(parentResponse.getFields().getSummary());
+                    }
+                    if (nonNull(parentResponse.getFields()) && nonNull(parentResponse.getFields().getIssuetype()) && nonNull(parentResponse.getFields().getIssuetype().getName())) {
+                        parentIssueDTO.setIssueType(parentResponse.getFields().getIssuetype().getName());
+                    }
+                    if (nonNull(parentResponse.getFields()) && nonNull(parentResponse.getFields().getPriority()) && nonNull(parentResponse.getFields().getPriority().getName())) {
+                        parentIssueDTO.setPriority(parentResponse.getFields().getPriority().getName());
+                    }
+                    if (nonNull(parentResponse.getFields()) && nonNull(parentResponse.getFields().getStatus()) && nonNull(parentResponse.getFields().getStatus().getName())) {
+                        parentIssueDTO.setStatus(parentResponse.getFields().getStatus().getName());
+                    }
 
-            if (nonNull(jiraIssueResponseDTO1.getFields().getFixVersions())) {
-                List<VersionDTO> versionDTOS = new ArrayList<>();
+                    issueDTO.setParent(parentIssueDTO);
+                }
 
-                // Converte as versões do Jira para VersionDTO
-                jiraIssueResponseDTO1.getFields().getFixVersions().forEach(version -> {
-                    // Para cada versão encontrada, busca no banco de dados e converte para VersionDTO
-                    versionDTOS.add(versionService.toDTO(versionService.findByIdOrCreate(version)));
-                });
-                // Define as versões no issueDTO
-                issueDTO.setVersion(versionDTOS);
-            }
+                if (nonNull(jiraIssueResponseDTO1.getFields()) && nonNull(jiraIssueResponseDTO1.getFields().getFixVersions())) {
+                    List<VersionDTO> versionDTOS = new ArrayList<>();
+                    jiraIssueResponseDTO1.getFields().getFixVersions().forEach(version -> {
+                        // Para cada versão encontrada, busca no banco de dados e converte para VersionDTO
+                        versionDTOS.add(versionService.toDTO(versionService.findByIdOrCreate(version)));
+                    });
+                    issueDTO.setVersion(versionDTOS);
+                }
 
-            issueDTOS.add(issueDTO);
-        });
+                issueDTOS.add(issueDTO);
+            });
+        }
 
         return issueDTOS;
     }

@@ -6,9 +6,13 @@ import lombok.Data;
 public class IssueTypeDonePercentageDTO {
     private String issueType;
     private Double donePercentage;
+    private Long timeEstimate;
+    private Long timeSpent;
 
-    public IssueTypeDonePercentageDTO(String issueType, Number donePercentage) {
+    public IssueTypeDonePercentageDTO(String issueType, Number donePercentage, Long timeEstimate, Long timeSpent) {
         this.issueType = issueType;
         this.donePercentage = donePercentage != null ? donePercentage.doubleValue() : null;
+        this.timeEstimate = timeEstimate;
+        this.timeSpent = timeSpent;
     }
 }
