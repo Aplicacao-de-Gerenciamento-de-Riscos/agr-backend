@@ -3,8 +3,10 @@ name: Java CI with Maven
 on:
   push:
     branches: [ "test-pipeline" ]
+    tags: [ "*" ]  # Gatilho para todas as tags
   pull_request:
     branches: [ "test-pipeline" ]
+  
 
 jobs:
   build:
@@ -67,19 +69,19 @@ jobs:
           name: agrbackend-package
           path: target/*.jar
 
-      - name: Create Releasee
+      - name: Create Release
         if: startsWith(github.ref, 'refs/tags/')
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GTOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false
 
-      - name: Send package to relase
+      - name: Send Package to Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-release-asset@v1
         env:
